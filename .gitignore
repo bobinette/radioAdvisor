@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# data
+data/
+menisque_train_set.csv
+
+# Apple fucking files
+.DS_Store
+
