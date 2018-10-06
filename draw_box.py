@@ -14,14 +14,19 @@ import os
 from data_parser import load_image
 
 
-def annotateImages(last_idx=None):
-
-    id2name = {"1": "corne_anterieure", "2": "corne_posterieure"}
-
+def loadImages():
     data_dir = os.path.join("data")
     im_names = os.listdir(os.path.join(data_dir))
     im_paths = [os.path.join(data_dir, name) for name in np.sort(im_names) if ".nii" in name and "._" not in name]
     db = [{"name": im_path, "boxes": []} for im_path in im_paths]
+    return db
+
+
+def annotateImages(last_idx=None):
+
+    id2name = {"1": "corne_anterieure", "2": "corne_posterieure"}
+
+    db = loadImages()
 
     annotations_dir = os.path.join("annotations")
     if not os.path.exists(annotations_dir):
@@ -33,9 +38,9 @@ def annotateImages(last_idx=None):
         done_names = [im_info["name"] for im_info in annotated_db]
         n_draw = last_idx
 
-    for im_roidb in db:
-        if im_roidb["name"] in done_names:
-            continue
+    to_annotate = [e for e in db if e['name'] not in done_names]
+
+    for im_roidb in to_annotate:
         print im_roidb["name"]
         im_roidb = annotateImage(im_roidb, id2name)
         annotated_db.append(im_roidb)
@@ -45,6 +50,11 @@ def annotateImages(last_idx=None):
             np.save(os.path.join(annotations_dir, "annotation_%s.npy" % n_draw), annotated_db)
 
     np.save(os.path.join(annotations_dir, "annotations.npy"), annotated_db)
+
+
+def annoteImagesFromFilenames(filenames):
+    db = loadImages()
+    db = [e for e in db if e['name'] in filenames]
 
 
 def annotateImage(im_roidb, id2name):

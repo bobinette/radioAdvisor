@@ -106,6 +106,7 @@ venv.bak/
 # data
 data/
 menisque_train_set.csv
+Menisque_Train.zip
 
 # Apple fucking files
 .DS_Store
