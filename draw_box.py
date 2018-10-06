@@ -8,6 +8,7 @@
 
 
 import cv2
+import json
 import numpy as np
 import os
 
@@ -22,34 +23,37 @@ def loadImages():
     return db
 
 
-def annotateImages(last_idx=None):
+def loadImagesToAnnotate(user):
 
-    id2name = {"1": "corne_anterieure", "2": "corne_posterieure"}
+    with open(os.path.join("split.json")) as f:
+        to_annotate = json.load(f)
 
-    db = loadImages()
+    to_annotate = to_annotate[user]
+
+    return to_annotate
+
+
+def annotateImages(user):
+
+    id2name = {"1": "corne_anterieure", "2": "corne_posterieure", "0": "fail"}
+
+    to_annotate = loadImagesToAnnotate(user)
 
     annotations_dir = os.path.join("annotations")
     if not os.path.exists(annotations_dir):
         os.makedirs(annotations_dir)
 
-    annotated_db, n_draw, done_names = [], 0, []
-    if last_idx is not None:
-        annotated_db = list(np.load(os.path.join(annotations_dir, "annotation_%s.npy" % str(last_idx))))
-        done_names = [im_info["name"] for im_info in annotated_db]
-        n_draw = last_idx
+    done_annotations = os.listdir(annotations_dir)
+    done_annotations = [a.split(".")[0] for a in done_annotations]
 
-    to_annotate = [e for e in db if e['name'] not in done_names]
-
-    for im_roidb in to_annotate:
-        print im_roidb["name"]
-        im_roidb = annotateImage(im_roidb, id2name)
-        annotated_db.append(im_roidb)
-        n_draw += 1
-
-        if n_draw % 5 == 0:
-            np.save(os.path.join(annotations_dir, "annotation_%s.npy" % n_draw), annotated_db)
-
-    np.save(os.path.join(annotations_dir, "annotations.npy"), annotated_db)
+    for im_name in to_annotate:
+        print im_name
+        if im_name.split(".")[0] in done_annotations:
+            continue
+        im_path = os.path.join("data", im_name)
+        im_roidb = annotateImage(im_path, id2name)
+        with open(os.path.join(annotations_dir, "%s.json" % im_name.split(".")[0]), "w") as f:
+            json.dump(im_roidb, f)
 
 
 def annoteImagesFromFilenames(filenames):
@@ -57,11 +61,11 @@ def annoteImagesFromFilenames(filenames):
     db = [e for e in db if e['name'] in filenames]
 
 
-def annotateImage(im_roidb, id2name):
+def annotateImage(im_path, id2name):
 
     global image, refPt
     refPt = []
-    image = load_image(im_roidb["name"])
+    image = load_image(im_path)
     cv2.namedWindow("image")
 
     cv2.setMouseCallback("image", click_and_crop)
@@ -85,6 +89,7 @@ def annotateImage(im_roidb, id2name):
 
     # if there are two reference points, then crop the region of interest
     # from the image and display it
+    im_roidb = {"name": im_path, "boxes": []}
     if len(refPt) > 1 and len(refPt) % 2 == 0:
         for i in range(len(refPt) / 2):
 
@@ -98,7 +103,7 @@ def annotateImage(im_roidb, id2name):
             box = np.asarray([refPt[2 * i][0], refPt[2 * i][1], refPt[2 * i + 1][0], refPt[2 * i + 1][1]])
 
             # Label box
-            id_ = labelBox(im_roidb["name"], box)
+            id_ = labelBox(im_path, box)
             id_ = id2name[str(id_)]
 
             roi = convert_xy_to_wh(box)
