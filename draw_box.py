@@ -8,23 +8,29 @@
 
 
 import cv2
+import json
 import numpy as np
 import os
+import sys
 
 from data_parser import load_image
 
 
 def loadImages():
     data_dir = os.path.join("data")
-    im_names = os.listdir(os.path.join(data_dir))
-    im_paths = [os.path.join(data_dir, name) for name in np.sort(im_names) if ".nii" in name and "._" not in name]
-    db = [{"name": im_path, "boxes": []} for im_path in im_paths]
+    im_names = [f for f in os.listdir(os.path.join(data_dir)) if f.endswith('.nii.gz')]
+    db = [{
+        "filename": name,
+        "name": os.path.join(data_dir, name),
+        "boxes": [],
+    } for name in im_names]
     return db
 
 
-def annotateImages(last_idx=None):
+id2name = {"1": "corne_anterieure", "2": "corne_posterieure"}
 
-    id2name = {"1": "corne_anterieure", "2": "corne_posterieure"}
+
+def annotateImages(last_idx=None):
 
     db = loadImages()
 
@@ -41,8 +47,8 @@ def annotateImages(last_idx=None):
     to_annotate = [e for e in db if e['name'] not in done_names]
 
     for im_roidb in to_annotate:
-        print im_roidb["name"]
-        im_roidb = annotateImage(im_roidb, id2name)
+        print(im_roidb["name"])
+        im_roidb = annotateImage(im_roidb)
         annotated_db.append(im_roidb)
         n_draw += 1
 
@@ -52,12 +58,30 @@ def annotateImages(last_idx=None):
     np.save(os.path.join(annotations_dir, "annotations.npy"), annotated_db)
 
 
-def annoteImagesFromFilenames(filenames):
+def annotateImagesFromFilenames(filenames, redo=False):
     db = loadImages()
-    db = [e for e in db if e['name'] in filenames]
+    db = [e for e in db if e['filename'] in filenames]
+
+    annotations_dir = os.path.join("annotations")
+    if not os.path.exists(annotations_dir):
+        os.makedirs(annotations_dir)
+
+    annotated = [
+        np.load(os.path.join(annotations_dir))["name"]
+        for im_info in os.listdir(annotations_dir)
+    ]
+
+    to_annotate = db
+    if not redo:
+        to_annotate = [e for e in db if e['name'] not in annotated]
+
+    for im_roidb in to_annotate:
+        print(im_roidb["name"])
+        im_roidb = annotateImage(im_roidb)
+        np.save(os.path.join(annotations_dir, "annotation_%s.npy" % im_roidb["name"]), annotated_db)
 
 
-def annotateImage(im_roidb, id2name):
+def annotateImage(im_roidb):
 
     global image, refPt
     refPt = []
@@ -86,7 +110,7 @@ def annotateImage(im_roidb, id2name):
     # if there are two reference points, then crop the region of interest
     # from the image and display it
     if len(refPt) > 1 and len(refPt) % 2 == 0:
-        for i in range(len(refPt) / 2):
+        for i in range(int(len(refPt) / 2)):
 
             # Ensure all box directions
             topleft = (min(refPt[2 * i][0], refPt[2 * i + 1][0]), min(refPt[2 * i][1], refPt[2 * i + 1][1]))
@@ -116,14 +140,14 @@ def labelBox(im_path, box):
     cv2.waitKey(1000)
 
     # Populate box for this image
-    print "Selected box at: ", box
+    print("Selected box at: ", box)
     while True:
         label = input("What is the label for this box? ")
         if label < np.inf:
-            print label
+            print(label)
             break
         else:
-            print "Label is less than: %s" % str(10)
+            print("Label is less than: %s" % str(10))
 
     # close all open windows
     cv2.destroyAllWindows()
@@ -157,3 +181,16 @@ def convert_xy_to_wh(box):
                        box[3] - box[1] + 1])
 
     return box_wh
+
+
+if __name__ == '__main__':
+    participants = json.load(open(os.path.join('split.json')))
+    if len(sys.argv) < 2:
+        print('Tell me who you are with "python draw_box.py <letter>" with letter in %s' % list(participants.keys()))
+
+    l = sys.argv[1]
+    if l not in participants.keys():
+        print('%s not in %s' % (l, list(participants.keys())))
+
+    redo = len(sys.argv) >= 3 and sys.argv[2] == 'all'
+    annotateImagesFromFilenames(participants[l], redo)
