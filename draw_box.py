@@ -16,6 +16,12 @@ import sys
 from data_parser import load_image
 
 
+def jsonDefault(o):
+    if isinstance(o, np.int64):
+        return int(o)
+    raise TypeError
+
+
 def loadImages():
     data_dir = os.path.join("data")
     im_names = [f for f in os.listdir(os.path.join(data_dir)) if f.endswith('.nii.gz')]
@@ -67,7 +73,7 @@ def annotateImagesFromFilenames(filenames, redo=False):
         os.makedirs(annotations_dir)
 
     annotated = [
-        np.load(os.path.join(annotations_dir))["name"]
+        json.load(open(os.path.join(annotations_dir, im_info)))['name']
         for im_info in os.listdir(annotations_dir)
     ]
 
@@ -78,7 +84,12 @@ def annotateImagesFromFilenames(filenames, redo=False):
     for im_roidb in to_annotate:
         print(im_roidb["name"])
         im_roidb = annotateImage(im_roidb)
-        np.save(os.path.join(annotations_dir, "annotation_%s.npy" % im_roidb["name"]), annotated_db)
+        if im_roidb:
+            json.dump(
+                im_roidb,
+                open(os.path.join(annotations_dir, "annotation_%s.npy" % im_roidb["filename"]), 'w'),
+                default=jsonDefault,
+            )
 
 
 def annotateImage(im_roidb):
@@ -107,26 +118,27 @@ def annotateImage(im_roidb):
     # Close all open windows
     cv2.destroyAllWindows()
 
-    # if there are two reference points, then crop the region of interest
-    # from the image and display it
-    if len(refPt) > 1 and len(refPt) % 2 == 0:
-        for i in range(int(len(refPt) / 2)):
+    if len(refPt) != 4:
+        return None
 
-            # Ensure all box directions
-            topleft = (min(refPt[2 * i][0], refPt[2 * i + 1][0]), min(refPt[2 * i][1], refPt[2 * i + 1][1]))
-            bottomright = (max(refPt[2 * i][0], refPt[2 * i + 1][0]), max(refPt[2 * i][1], refPt[2 * i + 1][1]))
-            refPt[2 * i] = topleft
-            refPt[2 * i + 1] = bottomright
+    # We want to have 4 points: top left and bottom right of the two boxes
+    boxes = []
+    if len(refPt) == 4:
 
+        for i in range(2):
+            topLeft = (min(refPt[2 * i][0], refPt[2 * i + 1][0]), min(refPt[2 * i][1], refPt[2 * i + 1][1]))
+            bottomRight = (max(refPt[2 * i][0], refPt[2 * i + 1][0]), max(refPt[2 * i][1], refPt[2 * i + 1][1]))
+
+            boxes.append((topLeft, bottomRight))
+
+        # Reorder the boxes to have the top one first
+        boxes = sorted(boxes, key=lambda p: p[1])
+
+        for i, (topLeft, bottomRight) in enumerate(boxes):
             # Box as [x_min, y_min, x_max, y_max]
-            box = np.asarray([refPt[2 * i][0], refPt[2 * i][1], refPt[2 * i + 1][0], refPt[2 * i + 1][1]])
-
-            # Label box
-            id_ = labelBox(im_roidb["name"], box)
-            id_ = id2name[str(id_)]
-
+            box = np.asarray([topLeft[0], topLeft[1], bottomRight[0], bottomRight[1]])
             roi = convert_xy_to_wh(box)
-            roi_info = {'box': list(roi), 'id': id_, 'is_background': False}
+            roi_info = {'box': list(roi), 'id': i, 'is_background': False}
             im_roidb["boxes"].append(roi_info)
 
     return im_roidb
