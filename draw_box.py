@@ -16,6 +16,10 @@ import sys
 from data_parser import load_image
 
 
+class QuitException(Exception):
+    pass
+
+
 def jsonDefault(o):
     if isinstance(o, np.int64):
         return int(o)
@@ -87,8 +91,9 @@ def annotateImagesFromFilenames(filenames, redo=False):
         if im_roidb:
             json.dump(
                 im_roidb,
-                open(os.path.join(annotations_dir, "annotation_%s.npy" % im_roidb["filename"]), 'w'),
+                open(os.path.join(annotations_dir, "annotation_%s.json" % im_roidb["filename"]), 'w'),
                 default=jsonDefault,
+                indent=2,
             )
 
 
@@ -115,6 +120,9 @@ def annotateImage(im_roidb):
         elif key == ord("c"):
             break
 
+        elif key == ord("q"):
+            raise QuitException()
+
     # Close all open windows
     cv2.destroyAllWindows()
 
@@ -132,7 +140,7 @@ def annotateImage(im_roidb):
             boxes.append((topLeft, bottomRight))
 
         # Reorder the boxes to have the top one first
-        boxes = sorted(boxes, key=lambda p: p[1])
+        boxes = sorted(boxes, key=lambda p: p[0][1])
 
         for i, (topLeft, bottomRight) in enumerate(boxes):
             # Box as [x_min, y_min, x_max, y_max]
@@ -204,5 +212,5 @@ if __name__ == '__main__':
     if l not in participants.keys():
         print('%s not in %s' % (l, list(participants.keys())))
 
-    redo = len(sys.argv) >= 3 and sys.argv[2] == 'all'
+    redo = len(sys.argv) >= 3 and (sys.argv[2] == 'all' or sys.argv[2] == 'redo')
     annotateImagesFromFilenames(participants[l], redo)
