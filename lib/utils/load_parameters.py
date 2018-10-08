@@ -7,7 +7,6 @@
 # --------------------------------------------------------
 
 import caffe
-import nibabel as nib
 import numpy as np
 import os
 
@@ -40,15 +39,3 @@ def load_net(train_dir, net_name):
 
     return net, pixel_means, ids
 
-
-def load_image(data_path):
-
-    """
-    Extract image from .nii.gz file
-    """
-
-    data = nib.load(data_path)
-    im = data.get_data()
-    im = np.tile(im[:, :, np.newaxis], (1, 1, 3))
-
-    return im

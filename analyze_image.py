@@ -14,7 +14,7 @@ import numpy as np
 import tools._init_paths
 
 from lib.analysis.get_rois import get_rpn_rois
-from lib.utils.load_parameters import load_image
+from lib.utils.load_image import load_image
 from lib.utils.config import cfg
 from tools.cache import CacheManager
 from tools.plot import plot_rectangle
