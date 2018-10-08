@@ -46,14 +46,18 @@ def annotateImages(user):
     done_annotations = os.listdir(annotations_dir)
     done_annotations = [a.split(".")[0] for a in done_annotations]
 
-    for im_name in to_annotate:
-        print (im_name)
+
+    for idx, im_name in enumerate(to_annotate):
+        print im_name
+
         if im_name.split(".")[0] in done_annotations:
             continue
         im_path = os.path.join("data", im_name)
         im_roidb = annotateImage(im_path, id2name)
         with open(os.path.join(annotations_dir, "%s.json" % im_name.split(".")[0]), "w") as f:
             json.dump(im_roidb, f)
+
+        print "%s / %s" % (str(idx), len(to_annotate))
 
 
 def annoteImagesFromFilenames(filenames):
