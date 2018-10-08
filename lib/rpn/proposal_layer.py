@@ -16,6 +16,7 @@ from lib.tools.nms_wrapper import nms
 
 DEBUG = False
 
+
 class ProposalLayer(caffe.Layer):
     """
     Outputs object detection proposals by applying estimated bounding-box

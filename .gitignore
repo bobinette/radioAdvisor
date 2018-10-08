@@ -1,113 +1,132 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+## Gitignore for the radioAdvisor pipeline
 
-# C extensions
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.d
+*.cuo
+
+# Compiled Dynamic libraries
 *.so
+*.dylib
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-# lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Compiled Static libraries
+*.lai
+*.la
+*.a
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Compiled protocol buffers
+*.pb.h
+*.pb.cc
+*_pb2.py
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+# Compiled python
+*.pyc
 
-# Translations
-*.mo
-*.pot
+# Compiled MATLAB
+*.mex*
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
 
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
+# IPython notebook checkpoints
 .ipynb_checkpoints
 
-# pyenv
-.python-version
+# Editor temporaries
+*.swp
+*~
 
-# celery beat schedule file
-celerybeat-schedule
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
 
-# SageMath parsed files
-*.sage.py
+# Eclipse Project settings
+*.*project
+.settings
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# QtCreator files
+*.user
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# PyCharm files
+.idea
 
-# Rope project settings
-.ropeproject
+# OSX dir files
+*.DS_Store
+*/.DS_Store
+.DS_Store
+*._.DS_Store
 
-# mkdocs documentation
-/site
 
-# mypy
-.mypy_cache/
+## Caffe
 
-# data
+# User's build configuration
+Makefile.config
+
+*.caffemodel
+*.caffemodel.h5
+*.solverstate
+*.solverstate.h5
+*.binaryproto
+*leveldb
+*lmdb
+
+# build, distribute, and bins (+ python proto bindings)
+build
+.build_debug/*
+caffe-fast-rcnn/.build_release/*
+distribute/*
+*.testbin
+*.bin
+caffe-fast-rcnn/python/caffe/proto/
+tmp/
+cmake_build
+.cmake_build
+
+# Generated documentation
+docs/_site
+docs/gathered
+_site
+doxygen
+docs/dev
+
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+
+CURRENT
+MANIFEST-*
+
+
+## OTHER
+src/.aws
+*.pyc
+*.mex*
+
+# Logs
+logs/*
+src/logs/*
+
+## Anaconda
+src/Anaconda2-4.3.1-Linux-x86_64.sh
+
+## Data
+
+# Folder with potential heavy data
 data/
+
+# Confidential data
 menisque_train_set.csv
 Menisque_Train.zip
 
-# Apple fucking files
-.DS_Store
+## Other
+
+# Local db
+src/db.sqlite3
+
+# Nginx
+venv/*
+nginx.conf
+nginx.conf.tpl
+src/nginx.conf
 

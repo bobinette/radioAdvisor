@@ -6,7 +6,6 @@
 # Written by Yann Giret
 # --------------------------------------------------------
 
-import tools._init_paths
 import caffe
 
 from lib.utils.config import cfg
@@ -20,7 +19,7 @@ class CacheManager(object):
 
     NET, PXL_MEAN, IDS = None, None, None
 
-    def get_net_seg(self):
+    def get_net(self):
         if self.NET is None:
             try:
                 self.NET, self.PXL_MEAN, self.IDS = self.compute_net(cfg.NET_DIR, cfg.NET_NAME)

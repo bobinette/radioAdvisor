@@ -15,10 +15,11 @@ from lib.analysis.analyzing import get_features_rpn
 def get_rpn_rois(im, net, pxl_mean, ids, nms_thresh, nms_thresh_cls, conf_thresh):
 
     # Forward image through rpn net
-    scores, seg_scores, _, boxes = get_features_rpn(im, net, pxl_mean)
+    scores, feats, boxes = get_features_rpn(im, net, pxl_mean)
 
     # Post process boxes per cls
-    rpn_rois, rpn_ids, rpn_scores = rpn_post_process(im, scores, boxes, ids, nms_thresh, nms_thresh_cls, conf_thresh)
+    rpn_rois, rpn_ids, rpn_scores = rpn_post_process(im, scores, boxes, ids,
+                                                     nms_thresh, nms_thresh_cls, conf_thresh)
 
     return rpn_rois, rpn_ids, rpn_scores
 

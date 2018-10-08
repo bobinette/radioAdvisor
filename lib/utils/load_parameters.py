@@ -43,6 +43,10 @@ def load_net(train_dir, net_name):
 
 def load_image(data_path):
 
+    """
+    Extract image from .nii.gz file
+    """
+
     data = nib.load(data_path)
     im = data.get_data()
     im = np.tile(im[:, :, np.newaxis], (1, 1, 3))

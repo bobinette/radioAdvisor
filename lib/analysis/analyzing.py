@@ -52,7 +52,7 @@ def get_features_rpn(im, net, pxl_mean):
     probs = blobs_out['cls_prob']
 
     # Get features
-    rois_feats = net.blobs["pool5_ycnn"].data
+    rois_feats = net.blobs["pool5"].data
     feats = np.zeros((0, rois_feats.shape[1]))
     for roi_feats in rois_feats:
         roi_feats = roi_feats.transpose((1, 2, 0))

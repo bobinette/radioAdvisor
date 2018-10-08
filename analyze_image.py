@@ -10,8 +10,8 @@
 Main function to analyze an image.
 """
 
-
 import numpy as np
+import tools._init_paths
 
 from lib.analysis.get_rois import get_rpn_rois
 from lib.utils.load_parameters import load_image
