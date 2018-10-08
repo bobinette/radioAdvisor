@@ -1,0 +1,1 @@
+{"boxes": [{"box": [102, 51, 41, 44], "is_background": false, "id": "corne_anterieure"}, {"box": [88, 123, 48, 86], "is_background": false, "id": "corne_posterieure"}], "name": "data/menisque_890.nii.gz"}
