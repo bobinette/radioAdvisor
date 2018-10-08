@@ -130,3 +130,5 @@ nginx.conf
 nginx.conf.tpl
 src/nginx.conf
 
+env/*
+.Python
