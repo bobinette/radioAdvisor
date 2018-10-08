@@ -1,0 +1,1 @@
+{"boxes": [{"box": [93, 63, 61, 51], "is_background": false, "id": "fail"}, {"box": [92, 51, 48, 52], "is_background": false, "id": "corne_anterieure"}, {"box": [105, 134, 35, 80], "is_background": false, "id": "fail"}, {"box": [102, 136, 52, 73], "is_background": false, "id": "corne_posterieure"}], "name": "data/menisque_1534.nii.gz"}
