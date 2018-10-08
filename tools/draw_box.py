@@ -47,7 +47,7 @@ def annotateImages(user):
     done_annotations = [a.split(".")[0] for a in done_annotations]
 
     for im_name in to_annotate:
-        print im_name
+        print (im_name)
         if im_name.split(".")[0] in done_annotations:
             continue
         im_path = os.path.join("data", im_name)
@@ -91,7 +91,7 @@ def annotateImage(im_path, id2name):
     # from the image and display it
     im_roidb = {"name": im_path, "boxes": []}
     if len(refPt) > 1 and len(refPt) % 2 == 0:
-        for i in range(len(refPt) / 2):
+        for i in range(int(len(refPt) / 2.)):
 
             # Ensure all box directions
             topleft = (min(refPt[2 * i][0], refPt[2 * i + 1][0]), min(refPt[2 * i][1], refPt[2 * i + 1][1]))
@@ -121,14 +121,15 @@ def labelBox(im_path, box):
     cv2.waitKey(1000)
 
     # Populate box for this image
-    print "Selected box at: ", box
+    print ("Selected box at: ", box)
     while True:
-        label = input("What is the label for this box? ")
+        label = int(input("What is the label for this box? "))
         if label < np.inf:
-            print label
+            print("%s" % "Bonjour %s")
+            print (str(label))
             break
         else:
-            print "Label is less than: %s" % str(10)
+            print ("Label is less than: %s" % str(10))
 
     # close all open windows
     cv2.destroyAllWindows()
