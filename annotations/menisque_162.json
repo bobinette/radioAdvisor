@@ -1,0 +1,25 @@
+{
+  "name": "data/menisque_162.nii.gz",
+  "boxes": [
+    {
+      "box": [
+        101,
+        79,
+        32,
+        46
+      ],
+      "id": "corne_anterieure",
+      "is_background": false
+    },
+    {
+      "box": [
+        104,
+        138,
+        27,
+        51
+      ],
+      "id": "corne_posterieure",
+      "is_background": false
+    }
+  ]
+}
