@@ -16,6 +16,10 @@ import sys
 from data_parser import load_image
 
 
+class RedoException(Exception):
+    pass
+
+
 class QuitException(Exception):
     pass
 
@@ -85,9 +89,16 @@ def annotateImagesFromFilenames(filenames, redo=False):
     if not redo:
         to_annotate = [e for e in db if e['name'] not in annotated]
 
-    for im_roidb in to_annotate:
-        print(im_roidb["name"])
-        im_roidb = annotateImage(im_roidb)
+    for i, im_roidb in enumerate(to_annotate):
+        print("%s - %d/%d" % (im_roidb["name"], i + 1, len(to_annotate)))
+        redo = True
+        while redo:
+            redo = False
+            try:
+                im_roidb = annotateImage(im_roidb)
+            except RedoException:
+                redo = True
+
         if im_roidb:
             json.dump(
                 im_roidb,
@@ -114,7 +125,7 @@ def annotateImage(im_roidb):
 
         # if the 'r' key is pressed, reset the cropping region
         if key == ord("r"):
-            refPt = []
+            raise RedoException
 
         # if the 'c' key is pressed, break from the loop
         elif key == ord("c"):

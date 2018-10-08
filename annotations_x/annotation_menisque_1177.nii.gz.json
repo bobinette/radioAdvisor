@@ -1,0 +1,26 @@
+{
+  "filename": "menisque_1177.nii.gz",
+  "name": "data/menisque_1177.nii.gz",
+  "boxes": [
+    {
+      "box": [
+        101,
+        75,
+        27,
+        57
+      ],
+      "id": 0,
+      "is_background": false
+    },
+    {
+      "box": [
+        98,
+        164,
+        42,
+        39
+      ],
+      "id": 1,
+      "is_background": false
+    }
+  ]
+}
