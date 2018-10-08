@@ -11,8 +11,9 @@ import cv2
 import json
 import numpy as np
 import os
+import tools._init_paths
 
-from data_parser import load_image
+from lib.utils.load_parameters import load_image
 
 
 def loadImages():
