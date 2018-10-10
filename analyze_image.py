@@ -50,7 +50,6 @@ def analyze_image(im_path):
                                      cfg.NMS_THRESH, cfg.NMS_THRESH_CLS, cfg.CONF_THRESH)
 
     # Classify each menisque
-    import ipdb; ipdb.set_trace()
     clf_ids = classify_rois(im, rois, net_clf, pxl_clf, ids_clf)
 
     # Plot results if needed
