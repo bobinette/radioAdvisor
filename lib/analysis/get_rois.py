@@ -29,7 +29,7 @@ def rpn_post_process(im, scores, boxes, ids, nms_thresh, nms_thresh_cls, conf_th
     max_score_per_cls = np.max(scores, axis=0)
 
     # Loop over classes to get confident enough detection
-    dets, ids = np.zeros((0, 5)), []
+    dets, det_ids = np.zeros((0, 5)), []
     for cls_ind, food_id in enumerate(ids[1:]):
         cls_ind += 1
         if max_score_per_cls[cls_ind] < conf_thresh:
@@ -41,13 +41,13 @@ def rpn_post_process(im, scores, boxes, ids, nms_thresh, nms_thresh_cls, conf_th
         dets_this_cls = dets_this_cls[keep, :]
         dets_this_cls = dets_this_cls[dets_this_cls[:, -1] >= conf_thresh]
         dets = np.vstack((dets, dets_this_cls))
-        ids += len(dets_this_cls) * [food_id]
+        det_ids += len(dets_this_cls) * [food_id]
 
-    # For the remaining boxes, remove overlaping boxes
-    keep = cpu_nms(dets.astype(np.float32), nms_thresh)
-    rpn_rois = np.round(dets[keep, :4]).astype(int)
-    rpn_scores = dets[keep, -1]
-    rpn_ids = list(np.array(ids)[keep])
+    # There are only to menisques in the image
+    top2_idx = np.argsort(dets[:, -1])[::-1][:2]
+    rpn_rois = np.round(dets[top2_idx, :4]).astype(int)
+    rpn_scores = dets[top2_idx, -1]
+    rpn_ids = list(np.array(det_ids)[top2_idx])
 
     return rpn_rois, rpn_ids, rpn_scores
 

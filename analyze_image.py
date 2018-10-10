@@ -21,7 +21,7 @@ from tools.plot import plot_rectangle
 
 
 np.random.seed(cfg.RNG_SEED)
-PLOT = False
+PLOT = True
 
 
 def analyze_image(im_path):
@@ -47,7 +47,7 @@ def analyze_image(im_path):
 
     # Plot results if needed
     if PLOT and im is not None:
-        plot_rectangle(im, rois)
+        plot_rectangle(im, rois, len(rois) * ["menisque"])
 
     return rois, ids
 

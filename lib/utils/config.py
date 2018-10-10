@@ -20,8 +20,7 @@ cfg = __C
 # ################ CNN ANALYSIS ################
 
 # Size of the image we forward in the net
-__C.IM_SIZE_SEG = 600  # 500
-__C.IM_SIZE_SEG_FOOD = 600
+__C.IM_SIZE_SEG = 256  # 500
 
 # Models and where to find them
 __C.NET_DIR = 'vgg_rpn_radioadvisor'
@@ -29,7 +28,7 @@ __C.NET_NAME = 'vgg16.caffemodel'
 
 # Pixel mean values (BGR order) as a (1, 1, 3) array
 # These are the values originally used for training VGG16
-__C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
+__C.PIXEL_MEANS = np.array([[[0.22625, 0.22625, 0.22625]]])
 
 # ################ RPN PARAMETERS ################
 

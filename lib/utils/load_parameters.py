@@ -35,7 +35,7 @@ def load_net(train_dir, net_name):
         pixel_means = np.load(os.path.join(train_path, 'mean_image.npy'))
 
     # Load ids
-    ids = np.load(os.path.join(train_path, 'food_label2id.npy'))
+    ids = np.load(os.path.join(train_path, 'ids.npy'))
 
     return net, pixel_means, ids
 

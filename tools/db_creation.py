@@ -25,8 +25,13 @@ def create_rpn_training_db(pct_train):
             im_roidb = json.load(f)
 
         # Change id to have only one class for rpn training
+        clean_roidb = []
         for box in im_roidb["boxes"]:
+            if box["id"] == "fail":
+                continue
             box["id"] = "menisque"
+            clean_roidb.append(box)
+        im_roidb["boxes"] = clean_roidb
 
         # Change the name of file for gpu training
         im_dir = os.path.join("/home", "yann", "radioAdvisor", "data", "images")
@@ -59,7 +64,10 @@ def split_and_save_db(database, pct_train):
 
     # Split the database into a training and validation database
     n_im = len(database)
-    idx_train = np.random.choice(np.arange(n_im), int(np.round(n_im * pct_train)), replace=False)
+    n_train = int(np.round(n_im * pct_train))
+    if n_train % 2 > 0:
+        n_train += 1
+    idx_train = np.random.choice(np.arange(n_im), n_train, replace=False)
     idx_test = np.arange(n_im)[np.in1d(np.arange(n_im), idx_train) < 1]
 
     # Convert db
@@ -76,7 +84,7 @@ def split_and_save_db(database, pct_train):
         os.makedirs(extraction_dir)
 
     # Save the database
-    np.save(os.path.join(extraction_dir, "imdb_train.npy"), imdb_train)
-    np.save(os.path.join(extraction_dir, "imdb_val.npy"), imdb_val)
-    np.save(os.path.join(extraction_dir, "imdb_test.npy"), imdb_test)
-    np.save(os.path.join(extraction_dir, "ids.npy"), ids)
+    np.save(os.path.join(extraction_dir, "imdb_train_radio.npy"), imdb_train)
+    np.save(os.path.join(extraction_dir, "imdb_val_radio.npy"), imdb_val)
+    np.save(os.path.join(extraction_dir, "imdb_test_radio.npy"), imdb_test)
+    np.save(os.path.join(extraction_dir, "ids_radio.npy"), ids)
