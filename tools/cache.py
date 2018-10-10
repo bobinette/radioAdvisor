@@ -17,16 +17,26 @@ class CacheManager(object):
     Object to manage cache through the app
     """
 
-    NET, PXL_MEAN, IDS = None, None, None
+    NET_RPN, PXL_RPN, IDS_RPN = None, None, None
+    NET_CLF, PXL_CLF, IDS_CLF = None, None, None
 
-    def get_net(self):
-        if self.NET is None:
+    def get_net_rpn(self):
+        if self.NET_RPN is None:
             try:
-                self.NET, self.PXL_MEAN, self.IDS = self.compute_net(cfg.NET_DIR, cfg.NET_NAME)
+                self.NET_RPN, self.PXL_RPN, self.IDS_RPN = self.compute_net(cfg.NET_DIR_RPN, cfg.NET_NAME_RPN)
             except Exception:
                 print "Unable loading net."
 
-        return self.NET, self.PXL_MEAN, self.IDS
+        return self.NET_RPN, self.PXL_RPN, self.IDS_RPN
+
+    def get_net_clf(self):
+        if self.NET_CLF is None:
+            try:
+                self.NET_CLF, self.PXL_CLF, self.IDS_CLF = self.compute_net(cfg.NET_DIR_CLF, cfg.NET_NAME_CLF)
+            except Exception:
+                print "Unable loading net."
+
+        return self.NET_CLF, self.PXL_CLF, self.IDS_CLF
 
     def compute_net(self, train_dir, net_name):
         """

@@ -62,6 +62,38 @@ def get_features_rpn(im, net, pxl_mean):
     return probs, feats, pred_boxes
 
 
+def get_features_ycnn(im, rois, net, pxl_mean):
+
+    """
+    Forward an image trough the network to extract regions.
+    """
+
+    # Get im blob
+    im_orig = im.astype(np.float32, copy=True)
+    im_orig -= pxl_mean
+    im_resized, im_scale = resize_image(im_orig, cfg.IM_SIZE_SEG)
+    im_blob = im_list_to_blob([im_resized])
+
+    # Get rois blob
+    rois = np.hstack((np.zeros((len(rois), 1)), rois))
+    rois_blobs = rois.astype(np.float32, copy=False)
+
+    blobs = {'data': None, 'rois': None}
+    blobs['data'] = im_blob
+    blobs['rois'] = rois_blobs
+
+    # Forward through net
+    net.blobs['data'].reshape(*(blobs['data'].shape))
+    net.blobs['rois'].reshape(*(blobs['rois'].shape))
+    blobs_out = net.forward(data=blobs['data'].astype(np.float32, copy=False),
+                            rois=blobs['rois'].astype(np.float32, copy=False)).copy()
+
+    # Extract data
+    cls_prob = blobs_out['cls_prob']
+
+    return cls_prob
+
+
 def resize_image(im, target_size):
 
     """

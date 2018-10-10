@@ -13,6 +13,7 @@ Main function to analyze an image.
 import numpy as np
 import tools._init_paths
 
+from lib.analysis.clf_rois import classify_rois
 from lib.analysis.get_rois import get_rpn_rois
 from lib.utils.load_image import load_image
 from lib.utils.config import cfg
@@ -38,17 +39,24 @@ def analyze_image(im_path):
 
     # Get parameters
     CACHE_MANAGER = CacheManager()
-    net, pxl_mean, ids = CACHE_MANAGER.get_net()
+    net_rpn, pxl_rpn, ids_rpn = CACHE_MANAGER.get_net_rpn()
+    net_clf, pxl_clf, ids_clf = CACHE_MANAGER.get_net_clf()
 
-    # Analyze image
+    # Load image
     im = load_image(im_path)
-    rois, ids, scores = get_rpn_rois(im, net, pxl_mean, ids,
+
+    # Detect menisques
+    rois, ids, scores = get_rpn_rois(im, net_rpn, pxl_rpn, ids_rpn,
                                      cfg.NMS_THRESH, cfg.NMS_THRESH_CLS, cfg.CONF_THRESH)
+
+    # Classify each menisque
+    import ipdb; ipdb.set_trace()
+    clf_ids = classify_rois(im, rois, net_clf, pxl_clf, ids_clf)
 
     # Plot results if needed
     if PLOT and im is not None:
-        plot_rectangle(im, rois, len(rois) * ["menisque"])
+        plot_rectangle(im, rois, clf_ids)
 
-    return rois, ids
+    return rois, clf_ids
 
 
