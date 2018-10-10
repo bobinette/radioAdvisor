@@ -32,6 +32,13 @@ __C.NET_NAME_CLF = 'vgg16.caffemodel'
 # These are the values originally used for training VGG16
 __C.PIXEL_MEANS = np.array([[[0.22625, 0.22625, 0.22625]]])
 
+
+# ################ CLF PARAMETERS ################
+
+# Classifcation threshold for fissure detection
+__C.CLS_CONF_THRESH = 0.15
+
+
 # ################ RPN PARAMETERS ################
 
 # NMS threshold used on inter-class rpn detection
