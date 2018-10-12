@@ -45,7 +45,9 @@ def test(test_idx=None):
         print idx, im_roidb["name"]
 
         # Load image
-        im = load_image(im_roidb["name"])
+        im_name = im_roidb["name"].split("/")[-1].split(".")[0]
+        im_path = os.path.join("data", "raw_data", "%s.nii.gz" % im_name)
+        im = load_image(im_path)
 
         # Detect menisques
         rois, _, _ = get_rpn_rois(im, net_rpn, pxl_rpn, ids_rpn,
