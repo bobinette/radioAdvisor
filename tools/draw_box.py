@@ -23,9 +23,10 @@ def loadImages():
     return db
 
 
-def loadImagesToAnnotate(user):
+def loadImagesToAnnotate(user, val):
 
-    with open(os.path.join("split.json")) as f:
+    prefix = "val" if val else "train"
+    with open(os.path.join("%s_split.json" % prefix)) as f:
         to_annotate = json.load(f)
 
     to_annotate = to_annotate[user]
@@ -33,11 +34,11 @@ def loadImagesToAnnotate(user):
     return to_annotate
 
 
-def annotateImages(user):
+def annotateImages(user, val=False):
 
     id2name = {"1": "corne_anterieure", "2": "corne_posterieure", "0": "fail"}
 
-    to_annotate = loadImagesToAnnotate(user)
+    to_annotate = loadImagesToAnnotate(user, val)
 
     annotations_dir = os.path.join("annotations")
     if not os.path.exists(annotations_dir):
@@ -46,13 +47,12 @@ def annotateImages(user):
     done_annotations = os.listdir(annotations_dir)
     done_annotations = [a.split(".")[0] for a in done_annotations]
 
-
     for idx, im_name in enumerate(to_annotate):
         print im_name
 
         if im_name.split(".")[0] in done_annotations:
             continue
-        im_path = os.path.join("data", im_name)
+        im_path = os.path.join("data", "raw_data", im_name)
         im_roidb = annotateImage(im_path, id2name)
         with open(os.path.join(annotations_dir, "%s.json" % im_name.split(".")[0]), "w") as f:
             json.dump(im_roidb, f)

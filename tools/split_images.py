@@ -11,7 +11,7 @@ import os
 # --------------------------------------------------------
 
 
-def split_images(participants, path):
+def split_images(participants, path, val=False):
     n = len(participants)
 
     attributions = defaultdict(list)
@@ -19,11 +19,16 @@ def split_images(participants, path):
         # Skip other files
         if not filename.endswith('.nii.gz'):
             continue
+        # Only validation set
+        if val and "validation" not in filename:
+            continue
 
         p = participants[i % n]
         attributions[p].append(filename)
 
-    json.dump(attributions, open(os.path.join('.', 'split.json'), 'w'), indent=2)
+    save_prefix = "val" if val else "train"
+    save_name = "%s_split.json" % save_prefix
+    json.dump(attributions, open(os.path.join('.', save_name), 'w'), indent=2)
 
 
 if __name__ == '__main__':
