@@ -1,0 +1,1 @@
+{"boxes": [{"box": [112, 48, 50, 51], "is_background": false, "id": "corne_anterieure"}, {"box": [107, 145, 34, 53], "is_background": false, "id": "corne_posterieure"}], "name": "data/raw_data/validation_menisque_126.nii.gz"}
