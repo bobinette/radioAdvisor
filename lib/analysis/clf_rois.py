@@ -19,7 +19,7 @@ def classify_rois(im, rois, net, pxl_mean, ids):
     cls_prob = get_features_ycnn(im, rois, net, pxl_mean)
 
     # Get classification for each menisque
-    clf_ids = []
+    clf_ids, f_scores, o_scores = [], [], []
     is_broken_ids = np.in1d(ids, np.array(["None"]), invert=True)
     for idx in xrange(len(rois)):
         # First check if broken
@@ -29,5 +29,9 @@ def classify_rois(im, rois, net, pxl_mean, ids):
             clf_ids.append(ids[is_broken_ids][np.argmax(cls_prob[idx][is_broken_ids])])
         else:
             clf_ids.append("None")
+        f_scores.append(np.max(cls_prob[idx][is_broken_ids]))
+        o_scores.append(list(cls_prob[idx][is_broken_ids]))
 
-    return clf_ids
+    f_score = np.max(f_scores)
+
+    return np.array(clf_ids), f_score, np.array(o_scores)

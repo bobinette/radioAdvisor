@@ -10,6 +10,7 @@
 Test for a given date
 """
 
+import csv
 import numpy as np
 import os
 import tools._init_paths
@@ -21,6 +22,7 @@ from lib.utils.config import cfg
 from tools.cache import CacheManager
 
 from scipy.optimize import linear_sum_assignment
+from sklearn import metrics
 
 
 def test(test_idx=None):
@@ -37,7 +39,11 @@ def test(test_idx=None):
     stats = {'well_cl': 0, 'bad_cl': 0, 'cmpt_cl': 0,
              'well_det': 0, 'bad_det': 0, 'fp': 0, 'cmpt_det': 0,
              'all_well': 0, 'all_cmpt': 0}
+    roc = {"fissure": {"scores": [], "label": []},
+           "localisation": {"scores": [], "label": []},
+           "orientation": {"scores": [], "label": []}}
 
+    # Loop over test
     for idx, im_roidb in enumerate(test_db):
         # DEBUG
         if test_idx is not None:
@@ -54,18 +60,77 @@ def test(test_idx=None):
                                   cfg.NMS_THRESH, cfg.NMS_THRESH_CLS, cfg.CONF_THRESH)
 
         # Classify each menisque
-        clf_ids = classify_rois(im, rois, net_clf, pxl_clf, ids_clf)
+        clf_ids, f_score, o_scores = classify_rois(im, rois, net_clf, pxl_clf, ids_clf)
 
         # Evaluate results
-        evaluate_results(im, im_roidb["boxes"], rois, np.array(clf_ids), stats)
+        evaluate_results(im, im_roidb["boxes"], rois, clf_ids, stats)
+
+        # Evaluate roc
+        evaluate_roc(im, im_roidb["boxes"], rois, clf_ids, f_score, o_scores, roc)
 
     # Print results
     print_results(stats)
+    # Get AUC score
+    compute_test_score(roc)
+
+
+def compute_test_score(roc):
+
+    # Fissure
+    f_fpr, f_tpr, _ = metrics.roc_curve(roc["fissure"]["label"], roc["fissure"]["scores"])
+    f_score = metrics.auc(f_fpr, f_tpr)
+
+    # Localisation
+    l_fpr, l_tpr, _ = metrics.roc_curve(roc["localisation"]["label"], roc["localisation"]["scores"])
+    l_score = metrics.auc(l_fpr, l_tpr)
+
+    # Orientation
+    o_fpr, o_tpr, _ = metrics.roc_curve(roc["orientation"]["label"], roc["orientation"]["scores"])
+    o_score = metrics.auc(o_fpr, o_tpr)
+
+    # Score
+    score = 0.4 * f_score + 0.3 * l_score + 0.3 * o_score
+    print "AUC: %s" % str(score)
+
+
+def evaluate_roc(im, gt_roidb, pred_boxes, pred_clfs, f_score, o_scores, roc):
+
+    gt_boxes, gt_clfs, gt_loc = get_gt_boxes(gt_roidb)
+
+    gt2est, est2gt = iou_assign(im, gt_boxes, pred_boxes, 0.3)
+
+    update_roc(gt_clfs, gt_loc, pred_clfs, gt2est, est2gt, f_score, o_scores, roc)
+
+    return roc
+
+
+def update_roc(gt_clfs, gt_loc, pred_clfs, gt2est, est2gt, f_score, o_scores, roc):
+
+    # Fissure [0: not broken, 1: broken]
+    is_broken_gt = np.in1d(gt_clfs, np.array(["None"]), invert=True)
+    f_label = 1 if np.sum(is_broken_gt) else 0
+    roc["fissure"]["label"].append(f_label)
+    roc["fissure"]["scores"].append(f_score)
+
+    # Localization [0: anterieure, 2: posterieure]
+    # Orientation [0: horizontal, 1: verticale]
+    for idx, gt_clf in enumerate(gt_clfs):
+        if gt_clf != "None":
+            roc["localisation"]["label"].append(gt_loc[idx])
+            roc["orientation"]["label"].append(int(gt_clf == "Verticale"))
+            idx_in_assign = np.where(gt2est == idx)[0]
+            if len(idx_in_assign) > 0:
+                pred_clf = pred_clfs[est2gt[idx_in_assign[0]]]
+                roc["localisation"]["scores"].append(gt_loc[idx] if pred_clf != "None" else 0.5)
+                roc["orientation"]["scores"].append(o_scores[est2gt[idx_in_assign[0]], 1])
+            else:
+                roc["localisation"]["scores"].append(0)
+                roc["orientation"]["scores"].append(0.5)
 
 
 def evaluate_results(im, gt_roidb, pred_boxes, pred_clfs, stats):
 
-    gt_boxes, gt_clfs = get_gt_boxes(gt_roidb)
+    gt_boxes, gt_clfs, _ = get_gt_boxes(gt_roidb)
 
     gt2est, est2gt = iou_assign(im, gt_boxes, pred_boxes, 0.3)
 
@@ -154,7 +219,12 @@ def get_gt_boxes(roidb):
         gt_boxes = np.vstack((gt_boxes, box_xyxy))
         gt_clfs.append(box["id"])
 
-    return gt_boxes, np.array(gt_clfs)
+    # Get the "corne classification"
+    # [0: anterieure (en haut dans l'image), 1: posterieure (en bas dans l'image)]
+    gt_loc = np.zeros(len(gt_boxes)).astype(int)
+    gt_loc[np.argmax(gt_boxes[:, 3])] = 1
+
+    return gt_boxes, np.array(gt_clfs), gt_loc
 
 
 def update_stats(stats, classif_eval, detect_eval, fp, print_clfs):
