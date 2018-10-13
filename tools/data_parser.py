@@ -10,9 +10,22 @@ import csv
 import os
 
 
-def parse_csv():
+def get_csv_data():
 
-    with open(os.path.join("menisque_train_set.csv"), "r") as f:
+    # Parse csv
+    train_data = parse_csv("train")
+    val_data = parse_csv("validation")
+    # Store in one dict
+    data = dict()
+    data.update(train_data)
+    data.update(val_data)
+
+    return data
+
+
+def parse_csv(set_type="train"):
+
+    with open(os.path.join("menisque_%s_set.csv" % set_type), "r") as f:
         raw_info = csv.reader(f, delimiter=',')
 
         info_dict = {}
