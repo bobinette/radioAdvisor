@@ -39,28 +39,35 @@ def create_training_db(pct_train, db_type="rpn", use_previous=True):
                 continue
             if db_type == "rpn":
                 box["id"] = "menisque"
-            elif db_type == "clf":
-                box["id"] = get_clf_id(box["id"], data[im_name])
+            elif db_type in ["clf", "f_clf", "o_clf"]:
+                box["id"] = get_clf_id(box["id"], data[im_name], db_type)
+            if db_type == "o_clf" and box["id"] == "None":
+                continue
             clean_roidb.append(box)
             ids.update([box["id"]])
+
         im_roidb["boxes"] = clean_roidb
 
         # Store in db
-        db.append(im_roidb)
+        if len(im_roidb["boxes"]):
+            db.append(im_roidb)
 
     # Split and save db
     split_and_save_db(db, ids, pct_train, db_type, use_previous)
 
 
-def get_clf_id(box_id, im_info):
+def get_clf_id(box_id, im_info, db_type):
 
     is_broken = im_info[box_id]
-    orient = "None"
-    if is_broken:
-        pos = box_id.split("_")[-1]
-        orient = im_info["orient_%s" % pos]
+    if db_type in ["clf", "f_clf"]:
+        clf = "None"
+        if is_broken:
+            pos = box_id.split("_")[-1]
+            clf = im_info["orient_%s" % pos]
+    elif db_type == "f_clf":
+        clf = "Fissure" if is_broken else "None"
 
-    return orient
+    return clf
 
 
 def store_images():
@@ -112,6 +119,63 @@ def split_and_save_db(database, ids, pct_train, db_type, use_previous):
     np.save(os.path.join("database", "test_names.npy"), test_names)
 
 
+def get_data_stats(data):
+
+    stats = {}
+    for im_name, im_info in data.iteritems():
+        nb_broken = 0
+        if im_info["corne_anterieure"]:
+            if im_info["orient_anterieure"] == "Horizontale":
+                stats.setdefault("AntHorz", []).append(im_name)
+            if im_info["orient_anterieure"] == "Verticale":
+                stats.setdefault("AntVert", []).append(im_name)
+            nb_broken += 1
+        if im_info["corne_posterieure"]:
+            if im_info["orient_posterieure"] == "Horizontale":
+                stats.setdefault("PostHorz", []).append(im_name)
+            if im_info["orient_posterieure"] == "Verticale":
+                stats.setdefault("PostVert", []).append(im_name)
+            nb_broken += 1
+        if nb_broken == 0:
+            stats.setdefault("None", []).append(im_name)
+        if nb_broken == 2:
+            stats.setdefault("Both", []).append(im_name)
+
+    return stats
+
+
+def get_db_stats(db):
+
+    stats = {}
+
+    for idx, im in enumerate(db):
+        # orientation
+        ids = np.array([box["id"] for box in im["boxes"]])
+        is_broken_ids = ids[np.in1d(ids, np.array("None"), invert=True)]
+        boxes = np.array([box["box"] for box in im["boxes"]])
+        # localisation
+        # [0: anterieure (en haut dans l'image), 1: posterieure (en bas dans l'image)]
+        locs = np.zeros(len(boxes))
+        locs[np.argmax(boxes[:, 3])] = 1
+        is_broken_locs = locs[np.in1d(ids, np.array("None"), invert=True)]
+        if len(is_broken_ids) == 0:
+            stats.setdefault("None", []).append(idx)
+            continue
+        if len(is_broken_ids) == 2:
+            stats.setdefault("Both", []).append(idx)
+            continue
+        if is_broken_ids[0] == "Horizontale" and is_broken_locs[0] == 0:
+            stats.setdefault("HorzAnt", []).append(idx)
+        if is_broken_ids[0] == "Verticale" and is_broken_locs[0] == 0:
+            stats.setdefault("VertAnt", []).append(idx)
+        if is_broken_ids[0] == "Horizontale" and is_broken_locs[0] == 1:
+            stats.setdefault("HorzPost", []).append(idx)
+        if is_broken_ids[0] == "Verticale" and is_broken_locs[0] == 1:
+            stats.setdefault("VertPost", []).append(idx)
+
+    return stats
+
+
 def get_split_idx(database, pct_train, use_previous):
 
     n_im = len(database)
@@ -125,12 +189,20 @@ def get_split_idx(database, pct_train, use_previous):
         idx_train = np.arange(n_im)[np.in1d(db_names, train_names)]
         idx_test = np.arange(n_im)[np.in1d(db_names, test_names)]
     else:
-        # Split the database into a training and validation database
-        n_train = int(np.round(n_im * pct_train))
-        if n_train % 2 > 0:
-            n_train += 1
-        idx_train = np.random.choice(np.arange(n_im), n_train, replace=False)
-        idx_test = np.arange(n_im)[np.in1d(np.arange(n_im), idx_train) < 1]
+        stats = get_db_stats(database)
+        idx_train, idx_test = [], []
+        for clf_name, clf_idxs in stats.iteritems():
+            if clf_name == "Both":
+                idx_train += clf_idxs
+                continue
+            n_im_clf = len(clf_idxs)
+            n_train_clf = int(np.round(n_im_clf * pct_train))
+            if n_train_clf % 2 > 0:
+                n_train_clf += 1
+            idx_train_clf = np.random.choice(np.arange(n_im_clf), n_train_clf, replace=False)
+            idx_test_clf = np.arange(n_im_clf)[np.in1d(np.arange(n_im_clf), idx_train_clf) < 1]
+            idx_train += list(np.array(clf_idxs)[idx_train_clf])
+            idx_test += list(np.array(clf_idxs)[idx_test_clf])
 
     return idx_train, idx_test
 
