@@ -18,7 +18,8 @@ class CacheManager(object):
     """
 
     NET_RPN, PXL_RPN, IDS_RPN = None, None, None
-    NET_CLF, PXL_CLF, IDS_CLF = None, None, None
+    NET_F_CLF, PXL_F_CLF, IDS_F_CLF = None, None, None
+    NET_O_CLF, PXL_O_CLF, IDS_O_CLF = None, None, None
 
     def get_net_rpn(self):
         if self.NET_RPN is None:
@@ -29,14 +30,23 @@ class CacheManager(object):
 
         return self.NET_RPN, self.PXL_RPN, self.IDS_RPN
 
-    def get_net_clf(self):
-        if self.NET_CLF is None:
+    def get_net_f_clf(self):
+        if self.NET_F_CLF is None:
             try:
-                self.NET_CLF, self.PXL_CLF, self.IDS_CLF = self.compute_net(cfg.NET_DIR_CLF, cfg.NET_NAME_CLF)
+                self.NET_F_CLF, self.PXL_F_CLF, self.IDS_F_CLF = self.compute_net(cfg.NET_DIR_F_CLF, cfg.NET_NAME_F_CLF)
             except Exception:
                 print "Unable loading net."
 
-        return self.NET_CLF, self.PXL_CLF, self.IDS_CLF
+        return self.NET_F_CLF, self.PXL_F_CLF, self.IDS_F_CLF
+
+    def get_net_o_clf(self):
+        if self.NET_O_CLF is None:
+            try:
+                self.NET_O_CLF, self.PXL_O_CLF, self.IDS_O_CLF = self.compute_net(cfg.NET_DIR_O_CLF, cfg.NET_NAME_O_CLF)
+            except Exception:
+                print "Unable loading net."
+
+        return self.NET_O_CLF, self.PXL_O_CLF, self.IDS_O_CLF
 
     def compute_net(self, train_dir, net_name):
         """

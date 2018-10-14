@@ -15,7 +15,7 @@ import numpy as np
 import os
 import tools._init_paths
 
-from lib.analysis.clf_rois import classify_rois
+from lib.analysis.clf_rois import classify_rois_, classify_rois
 from lib.analysis.get_rois import get_rpn_rois
 from lib.utils.load_image import load_image
 from lib.utils.config import cfg
@@ -30,7 +30,8 @@ def test(test_idx=None):
     # Get parameters
     CACHE_MANAGER = CacheManager()
     net_rpn, pxl_rpn, ids_rpn = CACHE_MANAGER.get_net_rpn()
-    net_clf, pxl_clf, ids_clf = CACHE_MANAGER.get_net_clf()
+    net_f_clf, pxl_f_clf, ids_f_clf = CACHE_MANAGER.get_net_f_clf()
+    net_o_clf, pxl_o_clf, ids_o_clf = CACHE_MANAGER.get_net_o_clf()
 
     # Load test db
     test_db = np.load(os.path.join("database", "clf", "imdb_test_clf_radio.npy"))
@@ -60,13 +61,19 @@ def test(test_idx=None):
                                   cfg.NMS_THRESH, cfg.NMS_THRESH_CLS, cfg.CONF_THRESH)
 
         # Classify each menisque
-        clf_ids, f_score, o_scores = classify_rois(im, rois, net_clf, pxl_clf, ids_clf)
+        if cfg.NET_DIR_F_CLF is not None:
+            clf_ids, f_score, l_scores, o_scores = classify_rois(im, rois,
+                                                                 net_f_clf, pxl_f_clf, ids_f_clf,
+                                                                 net_o_clf, pxl_o_clf, ids_o_clf)
+        else:
+            clf_ids, f_score, l_scores, o_scores = classify_rois_(im, rois,
+                                                                  net_o_clf, pxl_o_clf, ids_o_clf)
 
         # Evaluate results
         evaluate_results(im, im_roidb["boxes"], rois, clf_ids, stats)
 
         # Evaluate roc
-        evaluate_roc(im, im_roidb["boxes"], rois, clf_ids, f_score, o_scores, roc)
+        evaluate_roc(im, im_roidb["boxes"], f_score, l_scores, o_scores, roc)
 
     # Print results
     print_results(stats)
@@ -93,18 +100,34 @@ def compute_test_score(roc):
     print "AUC: %s" % str(score)
 
 
-def evaluate_roc(im, gt_roidb, pred_boxes, pred_clfs, f_score, o_scores, roc):
+def evaluate_roc(im, gt_roidb, f_score, l_scores, o_scores, roc):
 
     gt_boxes, gt_clfs, gt_loc = get_gt_boxes(gt_roidb)
 
-    gt2est, est2gt = iou_assign(im, gt_boxes, pred_boxes, 0.3)
-
-    update_roc(gt_clfs, gt_loc, pred_clfs, gt2est, est2gt, f_score, o_scores, roc)
+    update_roc(gt_clfs, gt_loc, f_score, l_scores, o_scores, roc)
 
     return roc
 
 
-def update_roc(gt_clfs, gt_loc, pred_clfs, gt2est, est2gt, f_score, o_scores, roc):
+def update_roc(gt_clfs, gt_loc, f_score, l_scores, o_scores, roc):
+
+    # Fissure [0: not broken, 1: broken]
+    is_broken_gt = np.in1d(gt_clfs, np.array(["None"]), invert=True)
+    f_label = 1 if np.sum(is_broken_gt) else 0
+    roc["fissure"]["label"].append(f_label)
+    roc["fissure"]["scores"].append(f_score)
+
+    # Localization [0: anterieure, 1: posterieure]
+    # Orientation [0: horizontal, 1: verticale]
+    for idx, gt_clf in enumerate(gt_clfs):
+        if gt_clf != "None":
+            roc["localisation"]["label"].append(gt_loc[idx])
+            roc["localisation"]["scores"].append(l_scores[0, 1])
+            roc["orientation"]["label"].append(int(gt_clf == "Verticale"))
+            roc["orientation"]["scores"].append(o_scores[0, 1])
+
+
+def update_roc_(gt_clfs, gt_loc, pred_clfs, gt2est, est2gt, f_score, o_scores, roc):
 
     # Fissure [0: not broken, 1: broken]
     is_broken_gt = np.in1d(gt_clfs, np.array(["None"]), invert=True)

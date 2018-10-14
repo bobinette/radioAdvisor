@@ -59,7 +59,7 @@ def create_training_db(pct_train, db_type="rpn", use_previous=True):
 def get_clf_id(box_id, im_info, db_type):
 
     is_broken = im_info[box_id]
-    if db_type in ["clf", "f_clf"]:
+    if db_type in ["clf", "o_clf"]:
         clf = "None"
         if is_broken:
             pos = box_id.split("_")[-1]
@@ -77,6 +77,9 @@ def store_images():
     for filename in os.listdir(data_dir):
         # Skip other files
         if not filename.endswith('.nii.gz'):
+            continue
+        # Skip other files
+        if "._" in filename:
             continue
         # Check if file already exists
         im_name = filename.split(".")[0]
@@ -99,7 +102,8 @@ def split_and_save_db(database, ids, pct_train, db_type, use_previous):
     imdb_test = list(np.asarray(database)[idx_test])
 
     # Get ids
-    ids = ["background"] + list(np.sort(list(ids)))
+    if db_type == "rpn":
+        ids = ["background"] + list(np.sort(list(ids)))
 
     # Get the extraction dir
     extraction_dir = os.path.join("database", db_type)
@@ -186,8 +190,8 @@ def get_split_idx(database, pct_train, use_previous):
         # Get db names
         db_names = np.array([im_roidb["name"].split("/")[-1].split(".")[0] for im_roidb in database])
         # Get train and test idx in db
-        idx_train = np.arange(n_im)[np.in1d(db_names, train_names)]
-        idx_test = np.arange(n_im)[np.in1d(db_names, test_names)]
+        idx_train = list(np.arange(n_im)[np.in1d(db_names, train_names)])
+        idx_test = list(np.arange(n_im)[np.in1d(db_names, test_names)])
     else:
         stats = get_db_stats(database)
         idx_train, idx_test = [], []

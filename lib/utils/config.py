@@ -23,14 +23,20 @@ cfg = __C
 __C.IM_SIZE_SEG = 256  # 500
 
 # Models and where to find them
-__C.NET_DIR_RPN = 'vgg_rpn_radioadvisor'
+__C.NET_DIR_RPN = 'vgg_rpn_radio'
 __C.NET_NAME_RPN = 'vgg16.caffemodel'
-__C.NET_DIR_CLF = 'vgg_clf_radioadvisor'
-__C.NET_NAME_CLF = 'vgg16.caffemodel'
+# __C.NET_DIR_F_CLF = 'vgg_f_clf_radio'
+__C.NET_DIR_F_CLF = None
+__C.NET_NAME_F_CLF = 'vgg16.caffemodel'
+# __C.NET_DIR_O_CLF = 'vgg_o_clf_radio'
+__C.NET_DIR_O_CLF = 'vgg_clf_radioadvisor'
+__C.NET_NAME_O_CLF = 'vgg16.caffemodel'
+
 
 # Pixel mean values (BGR order) as a (1, 1, 3) array
 # These are the values originally used for training VGG16
-__C.PIXEL_MEANS = np.array([[[0.22625, 0.22625, 0.22625]]])
+# __C.PIXEL_MEANS = np.array([[[0.22625, 0.22625, 0.22625]]])
+__C.PIXEL_MEANS = np.array([[[0.2203, 0.2203, 0.2203]]])
 
 
 # ################ CLF PARAMETERS ################

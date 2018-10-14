@@ -1,0 +1,12 @@
+base_lr: 0.0010000000475
+display: 20
+lr_policy: "step"
+gamma: 0.10000000149
+momentum: 0.899999976158
+weight_decay: 0.000500000023749
+stepsize: 5100
+snapshot: 0
+snapshot_prefix: "/home/yann/python-training/foodvisor/apps/training/output/vgg_rpn_radio/vgg16"
+net: "/home/yann/python-training/foodvisor/apps/training/models/RPN/VGG16/2/train.prototxt"
+average_loss: 100
+iter_size: 2
