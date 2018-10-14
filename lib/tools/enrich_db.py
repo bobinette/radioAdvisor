@@ -13,7 +13,7 @@ boxes around a ground truth box. """
 
 import numpy as np
 
-from foodvisor.apps.pipeline.lib.tools.nms import nms
+from lib.tools.nms import nms
 
 
 def augment_im_rois(rois, n_box):

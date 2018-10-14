@@ -23,7 +23,7 @@ from tools.cache import CacheManager
 from tools.data_parser import parse_csv
 
 
-def test(csv_name):
+def test(csv_name=None):
 
     # Get parameters
     CACHE_MANAGER = CacheManager()
@@ -32,7 +32,10 @@ def test(csv_name):
     net_o_clf, pxl_o_clf, ids_o_clf = CACHE_MANAGER.get_net_o_clf()
 
     # Load test db
-    data = parse_csv(csv_name)
+    data_dir = os.path.join("data", "test_data")
+    data = {filename.split(".")[0]: [] for filename in os.listdir(data_dir) if filename.endswith(".nii.gz") and "._" not in filename}
+    if csv_name is not None:
+        data = parse_csv(csv_name)
 
     # Loop over test
     test_names = []
@@ -42,7 +45,8 @@ def test(csv_name):
         print idx, im_name
 
         # Load image
-        im_path = os.path.join("data", "raw_data", "%s.nii.gz" % im_name)
+        im_dir = "test_data" if csv_name is None else "raw_data"
+        im_path = os.path.join("data", im_dir, "%s.nii.gz" % im_name)
         im = load_image(im_path)
 
         # Detect menisques

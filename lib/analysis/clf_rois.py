@@ -9,15 +9,29 @@
 import numpy as np
 
 from lib.analysis.analyzing import get_features_ycnn
+from lib.tools.enrich_db import augment_im_rois
 from lib.utils.config import cfg
 from tools.plot import plot_rectangle
 
 
-def classify_rois(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids):
+def classify_rois(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids, enrich=False):
 
-    # Forward rois through net to get probas
-    f_cls_prob = get_features_ycnn(im, rois, f_net, f_pxl_mean)
-    o_cls_prob = get_features_ycnn(im, rois, o_net, o_pxl_mean)
+    if enrich:
+        # Augment rois
+        enriched_rois, enrich2roi = augment_im_rois(rois, 16)
+
+        # Forward rois through net to get probas
+        f_cls_prob_enriched = get_features_ycnn(im, enriched_rois, f_net, f_pxl_mean)
+        o_cls_prob_enriched = get_features_ycnn(im, enriched_rois, o_net, o_pxl_mean)
+
+        # Get cls_prob
+        # import ipdb; ipdb.set_trace()
+        f_cls_prob, o_cls_prob = get_probs_from_enrich(f_cls_prob_enriched, o_cls_prob_enriched, enrich2roi)
+
+    else:
+        # Forward rois through net to get probas
+        f_cls_prob = get_features_ycnn(im, rois, f_net, f_pxl_mean)
+        o_cls_prob = get_features_ycnn(im, rois, o_net, o_pxl_mean)
 
     # Get rois localisation
     locs = get_rois_loc(rois)
@@ -102,3 +116,21 @@ def get_rois_loc(rois):
     locs[np.argmax(rois[:, 3])] = 1
 
     return locs
+
+
+def get_probs_from_enrich(f_cls_prob_enriched, o_cls_prob_enriched, enrich2roi):
+
+    f_cls_prob = np.zeros((0, 2))
+    o_cls_prob = np.zeros((0, 2))
+    for idx in np.unique(enrich2roi):
+        f_cls_prob_this_roi = f_cls_prob_enriched[enrich2roi == idx]
+        nb_broken = np.sum(f_cls_prob_this_roi[:, 1] > cfg.CLS_CONF_THRESH)
+        if nb_broken >= 8:
+            f_cls_prob = np.vstack((f_cls_prob, np.max(f_cls_prob_this_roi, axis=0)))
+        else:
+            f_cls_prob = np.vstack((f_cls_prob, np.mean(f_cls_prob_this_roi, axis=0)))
+
+        o_cls_prob_this_roi = o_cls_prob_enriched[enrich2roi == idx]
+        o_cls_prob = np.vstack((o_cls_prob, np.mean(o_cls_prob_this_roi, axis=0)))
+
+    return f_cls_prob, o_cls_prob
