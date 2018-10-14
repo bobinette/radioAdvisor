@@ -10,7 +10,6 @@
 Test for a given date
 """
 
-import csv
 import numpy as np
 import os
 import tools._init_paths
@@ -34,7 +33,7 @@ def test(test_idx=None):
     net_o_clf, pxl_o_clf, ids_o_clf = CACHE_MANAGER.get_net_o_clf()
 
     # Load test db
-    test_db = np.load(os.path.join("database", "clf", "imdb_test_clf_radio.npy"))
+    test_db = np.load(os.path.join("database", "clf", "imdb_test_clf_radio_v2.npy"))
 
     # Init test metrics
     stats = {'well_cl': 0, 'bad_cl': 0, 'cmpt_cl': 0,

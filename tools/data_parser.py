@@ -6,8 +6,11 @@
 # Written by Yann Giret
 # --------------------------------------------------------
 
+import codecs
 import csv
 import os
+
+from openpyxl import load_workbook
 
 
 def get_csv_data():
@@ -25,8 +28,8 @@ def get_csv_data():
 
 def parse_csv(set_type="train"):
 
-    with open(os.path.join("menisque_%s_set.csv" % set_type), "r") as f:
-        raw_info = csv.reader(f, delimiter=',')
+    with open(os.path.join("menisque_%s_set.csv" % set_type), "rU") as f:
+        raw_info = csv.reader(f, delimiter=',', dialect=csv.excel_tab)
 
         info_dict = {}
         cmpt = 0
@@ -41,3 +44,26 @@ def parse_csv(set_type="train"):
                                  "position": str(row[5])}
 
     return info_dict
+
+
+def convert_csv(filename):
+    """Create the csv file based on the args.
+
+    Each arg should be a list of size n, n being the number
+    of images. Then:
+    - f_scores[i]: a probability indicating broken or not
+    - location[i]: 0 for antérieure, 1 for postérieure
+    - o_scores[i]: an array of size 2: [<h prob>, <v prob>]
+    """
+    wb = load_workbook("%s.xlsx" % filename)
+    ws = wb.active
+
+    res = []
+    for row in ws:
+        # ant, post = (1, 0) if location == 0 else (0, 1)
+        res.append(u'%s,%s,%s,%s,%s,%s' % (row[0].value, row[1].value, row[2].value, row[3].value, row[4].value, row[5].value))
+
+    csv = u'\n'.join(res)
+    with codecs.open('%s.csv' % filename, 'w', 'utf-8') as file:
+        file.write('\ufeff')  # UTF-8 BOM header
+        file.write(csv)

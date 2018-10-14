@@ -25,11 +25,11 @@ __C.IM_SIZE_SEG = 256  # 500
 # Models and where to find them
 __C.NET_DIR_RPN = 'vgg_rpn_radio'
 __C.NET_NAME_RPN = 'vgg16.caffemodel'
-# __C.NET_DIR_F_CLF = 'vgg_f_clf_radio'
-__C.NET_DIR_F_CLF = None
+__C.NET_DIR_F_CLF = 'vgg_f_clf_radio_full'
+# __C.NET_DIR_F_CLF = None
 __C.NET_NAME_F_CLF = 'vgg16.caffemodel'
-# __C.NET_DIR_O_CLF = 'vgg_o_clf_radio'
-__C.NET_DIR_O_CLF = 'vgg_clf_radioadvisor'
+__C.NET_DIR_O_CLF = 'vgg_o_clf_radio_full'
+# __C.NET_DIR_O_CLF = 'vgg_clf_radio'
 __C.NET_NAME_O_CLF = 'vgg16.caffemodel'
 
 

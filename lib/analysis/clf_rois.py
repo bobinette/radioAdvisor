@@ -47,8 +47,8 @@ def classify_rois(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids):
         l_scores = np.array(l_scores)
         o_scores = np.array(o_scores)
         if nb_broken == 2:
-            l_scores = l_scores[np.argmax(f_scores)]
-            o_scores = o_scores[np.argmax(f_scores)]
+            l_scores = l_scores[np.argmax(f_scores)][np.newaxis, :]
+            o_scores = o_scores[np.argmax(f_scores)][np.newaxis, :]
 
     return np.array(clf_ids), f_score, l_scores, o_scores
 
@@ -64,11 +64,10 @@ def classify_rois_(im, rois, net, pxl_mean, ids):
     # Get classification for each menisque
     clf_ids, f_scores, l_scores, o_scores = [], [], [], []
     is_broken_ids = np.in1d(ids, np.array(["None"]), invert=True)
-    not_is_broken_ids = np.in1d(ids, np.array(["None"]))
     for idx in xrange(len(rois)):
         # Fissure
         is_broken = np.max(cls_prob[idx][is_broken_ids]) > cfg.CLS_CONF_THRESH
-        f_score_roi = np.max(cls_prob[idx][is_broken_ids]) if is_broken else np.min(cls_prob[idx][not_is_broken_ids])
+        f_score_roi = np.max(cls_prob[idx][is_broken_ids]) if is_broken else np.min(cls_prob[idx][is_broken_ids])
         f_scores.append(f_score_roi)
         # Localisation
         if is_broken:

@@ -119,6 +119,7 @@ data/
 menisque_train_set.csv
 menisque_validation_set.csv
 Menisque_Train.zip
+*.csv
 
 ## Other
 

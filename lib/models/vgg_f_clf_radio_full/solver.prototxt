@@ -1,0 +1,11 @@
+base_lr: 9.99999974738e-05
+display: 20
+lr_policy: "step"
+gamma: 0.10000000149
+momentum: 0.899999976158
+weight_decay: 0.000500000023749
+stepsize: 2820
+snapshot: 0
+snapshot_prefix: "/home/yann/python-training/foodvisor/apps/training/output/vgg_f_clf_radio/vgg16"
+net: "/home/yann/python-training/foodvisor/apps/training/models/CLF/VGG16/2/train.prototxt"
+average_loss: 100

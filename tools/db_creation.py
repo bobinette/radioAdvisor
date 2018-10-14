@@ -43,6 +43,8 @@ def create_training_db(pct_train, db_type="rpn", use_previous=True):
                 box["id"] = get_clf_id(box["id"], data[im_name], db_type)
             if db_type == "o_clf" and box["id"] == "None":
                 continue
+            if box["id"] == "":
+                continue
             clean_roidb.append(box)
             ids.update([box["id"]])
 
@@ -102,8 +104,11 @@ def split_and_save_db(database, ids, pct_train, db_type, use_previous):
     imdb_test = list(np.asarray(database)[idx_test])
 
     # Get ids
+    ids = list(np.sort(list(ids)))
     if db_type == "rpn":
-        ids = ["background"] + list(np.sort(list(ids)))
+        ids = ["background"] + ids
+    if db_type == "f_clf":
+        ids = ids[::-1]
 
     # Get the extraction dir
     extraction_dir = os.path.join("database", db_type)
@@ -117,10 +122,11 @@ def split_and_save_db(database, ids, pct_train, db_type, use_previous):
     np.save(os.path.join(extraction_dir, "ids_%s_radio.npy" % db_type), ids)
 
     # Get im names to be able to keep the same split
-    train_names = [im["name"].split("/")[-1].split(".")[0] for im in imdb_train]
-    test_names = [im["name"].split("/")[-1].split(".")[0] for im in imdb_test]
-    np.save(os.path.join("database", "train_names.npy"), train_names)
-    np.save(os.path.join("database", "test_names.npy"), test_names)
+    if not use_previous:
+        train_names = [im["name"].split("/")[-1].split(".")[0] for im in imdb_train]
+        test_names = [im["name"].split("/")[-1].split(".")[0] for im in imdb_test]
+        np.save(os.path.join("database", "train_names.npy"), train_names)
+        np.save(os.path.join("database", "test_names.npy"), test_names)
 
 
 def get_data_stats(data):
@@ -201,7 +207,7 @@ def get_split_idx(database, pct_train, use_previous):
                 continue
             n_im_clf = len(clf_idxs)
             n_train_clf = int(np.round(n_im_clf * pct_train))
-            if n_train_clf % 2 > 0:
+            if pct_train < 1 and n_train_clf % 2 > 0:
                 n_train_clf += 1
             idx_train_clf = np.random.choice(np.arange(n_im_clf), n_train_clf, replace=False)
             idx_test_clf = np.arange(n_im_clf)[np.in1d(np.arange(n_im_clf), idx_train_clf) < 1]
