@@ -6,12 +6,107 @@
 # Written by Yann Giret
 # --------------------------------------------------------
 
+import cv2
 import json
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+from lib.utils.config import cfg
 from lib.utils.load_image import load_image
-from tools.data_parser import get_csv_data
+from tools.data_parser import get_csv_data, load_seg_annotation
+
+
+def create_seg_training_db(datasets, extract_name, pct_train, use_hard_label=True, data_ext="npy"):
+
+    # Init paths
+    root_dir = os.path.join("/", "home", "yann", "radioAdvisor")
+    data_dir = os.path.join(root_dir, "data", "sarco", "raw_data")
+    im_dir = os.path.join(root_dir, "data", "sarco", "images")
+
+    # Init stats
+    pxl_stats = {"sum": 0, "cmpt": 0}
+    size_stats = {"h": [], "w": []}
+    area_stats = {"back": 0, "fore": 0, "hard_back": 0}
+
+    db = []
+    for dataset in datasets:
+        xl_db = load_seg_annotation(os.path.join(root_dir, "data", "sarco", dataset))
+        for id_, info in xl_db.items():
+            # Image
+            data_path = os.path.join(data_dir, info["data_file"])
+            im = load_image(data_path, tile_image=True, data_type="dcm")
+            im_path = os.path.join(im_dir, "%s.%s" % (id_, data_ext))
+            if data_ext == "jpg":
+                cv2.imwrite(im_path, im)
+            else:
+                np.save(im_path, im)
+            # Annotations
+            annot_path = os.path.join(data_dir, info["annot_file"])
+            label = load_image(annot_path, tile_image=False, data_type="nii")
+            # Store
+            im_roidb = {"name": im_path,
+                        "foods": [{"id": "foreground", "mask": label.astype(np.uint8)}]}
+            if use_hard_label:
+                hard_back_label = get_hard_label(label)
+                im_roidb["foods"].append({"id": "hard_background", "mask": hard_back_label.astype(np.uint8)})
+            db.append(im_roidb)
+            # Stats
+            area_stats["back"] += np.sum(label == 0)
+            area_stats["fore"] += np.sum(label == 1)
+            if use_hard_label:
+                area_stats["hard_back"] += np.sum(hard_back_label == 1)
+            pxl_stats["sum"] += np.sum(im[:, :, 0])
+            pxl_stats["cmpt"] += np.size(im[:, :, 0])
+            size_stats["h"].append(im.shape[0])
+            size_stats["w"].append(im.shape[1])
+
+    # Split db
+    n_im = len(db)
+    n_train = int(np.round(n_im * pct_train))
+    if pct_train < 1 and n_train % 2 > 0:
+        n_train += 1
+    idx_train = np.random.choice(np.arange(n_im), n_train, replace=False)
+    idx_test = np.arange(n_im)[np.in1d(np.arange(n_im), idx_train) < 1]
+    db_train = [db[idx] for idx in idx_train]
+    db_test = [db[idx] for idx in idx_test]
+
+    # Save db
+    extraction_dir = os.path.join("/", "data", "train_extracts", "radio_extractions")
+    np.save(os.path.join(extraction_dir, "imdb_train_%s.npy" % extract_name), db_train)
+    np.save(os.path.join(extraction_dir, "imdb_val_%s.npy" % extract_name), db_test)
+    ids = ["background", "foreground", "hard_background"] if use_hard_label else ["background", "foreground"]
+    np.save(os.path.join(extraction_dir, "food_label2id_%s.npy" % extract_name), ids)
+
+    return area_stats, pxl_stats, size_stats
+
+
+def get_hard_label(label):
+
+    inv_label = (label == 0).astype(np.uint8)
+    dist = cv2.distanceTransform(inv_label, distanceType=cv2.DIST_L2, maskSize=3)
+    border_mask = (dist < cfg.BORDER_DIST_MAX).astype(int)
+    hard_back_mask = (border_mask * inv_label).astype(np.uint8)
+
+    return hard_back_mask
+
+
+def get_area_stats(extract_name):
+
+    extraction_dir = os.path.join("/", "data", "train_extracts", "radio_extractions")
+    db = np.load(os.path.join(extraction_dir, "imdb_train_%s.npy" % extract_name))
+
+    cum_back_area, cum_fore_area = 0, 0
+    ratios = []
+    for im_roidb in db:
+        for food in im_roidb["foods"]:
+            back_area = np.sum(food["mask"] == 0)
+            fore_area = np.sum(food["mask"] == 1)
+            ratios.append(fore_area / back_area)
+            cum_back_area += back_area
+            cum_fore_area += fore_area
+
+    return ratios, cum_back_area, cum_fore_area
 
 
 def create_training_db(pct_train, db_type="rpn", use_previous=True):

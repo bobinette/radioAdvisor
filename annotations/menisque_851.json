@@ -1,1 +1,0 @@
-{"boxes": [{"box": [106, 61, 38, 73], "is_background": false, "id": "corne_anterieure"}, {"box": [107, 146, 28, 70], "is_background": false, "id": "fail"}, {"box": [97, 144, 39, 68], "is_background": false, "id": "corne_posterieure"}, {"box": [51, 198, 1, 1], "is_background": false, "id": "fail"}], "name": "data/menisque_851.nii.gz"}

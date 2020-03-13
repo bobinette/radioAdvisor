@@ -9,6 +9,8 @@
 import caffe
 import numpy as np
 import os
+import torch
+import torchvision
 
 from lib.utils.config import cfg
 
@@ -39,3 +41,25 @@ def load_net(train_dir, net_name):
 
     return net, pixel_means, ids
 
+
+def load_net_pytorch(train_dir):
+
+    """
+    Load a pytorch net.
+    """
+
+    # Set the gpu device
+    device = torch.device("cuda:" + str(cfg.GPU_ID) if torch.cuda.is_available() else "cpu")
+    torch.cuda.set_device(cfg.GPU_ID)
+
+    # Load empty model
+    model = torchvision.models.segmentation.__dict__[cfg.MODEL_TYPE_SEG](num_classes=cfg.NB_CLS_SEG)
+    model = model.cuda()
+
+    # Load trained model
+    net_dir = os.path.join("/", "data", "radio_models", train_dir)
+    net_path = os.path.join(net_dir, "model_best.pth")
+    model.load_state_dict(torch.load(net_path, map_location=device)["state_dict"])
+    model.eval()
+
+    return model
