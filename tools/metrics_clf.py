@@ -8,8 +8,6 @@ Created on Mon Oct  8 16:20:03 2018
 import pandas as pd
 from sklearn import metrics
 import numpy as np
-import SimpleITK as sitk
-import os
 
 
 def menisque_metrics(reference_path, prediction_path):
@@ -32,17 +30,17 @@ def menisque_metrics(reference_path, prediction_path):
     auc_detection = metrics.roc_auc_score(y_true, y_pred)
 
     # Localisation
-    y_true = ref.loc[ref['Fissure'] == True,'Corne anterieure']
-    y_pred = pred.loc[ref['Fissure'] == True,'Corne anterieure']
+    y_true = ref.loc[ref['Fissure'] == True, 'Corne anterieure']
+    y_pred = pred.loc[ref['Fissure'] == True, 'Corne anterieure']
 
     auc_position = metrics.roc_auc_score(y_true, y_pred)
 
     # Orientation
-    ante = ref.loc[ref['Fissure'] == True,'Orientation anterieure'] == 'Horizontale' 
-    poste = ref.loc[ref['Fissure'] == True,'Orientation posterieure'] == 'Horizontale'
+    ante = ref.loc[ref['Fissure'] == True, 'Orientation anterieure'] == 'Horizontale' 
+    poste = ref.loc[ref['Fissure'] == True, 'Orientation posterieure'] == 'Horizontale'
 
     y_true = np.logical_or(ante,poste) 
-    y_pred = pred.loc[ref['Fissure'] == True,'Orientation horizontale']
+    y_pred = pred.loc[ref['Fissure'] == True, 'Orientation horizontale']
 
     auc_orientation = metrics.roc_auc_score(y_true, y_pred)
 
