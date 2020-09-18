@@ -11,7 +11,7 @@ import numpy as np
 import pydicom
 
 
-def load_image(data_path, tile_image=True, data_type="nii"):
+def load_image(data_path, tile_image=True, transpose=True, data_type="nii"):
 
     """
     Extract image from .nii.gz file
@@ -37,7 +37,7 @@ def load_image(data_path, tile_image=True, data_type="nii"):
         if len(im.shape) == 3:
             im = im[:, :, 0]
 
-    if data_type == "nii":
+    if data_type == "nii" and transpose:
         im = im.transpose()
 
     return im

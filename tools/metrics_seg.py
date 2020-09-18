@@ -12,17 +12,17 @@ import os
 from lib.utils.load_image import load_image
 
 
-def compute_metrics():
+def compute_metrics(data_name, algo_version=""):
 
-    gt_dir = os.path.join("data", "sarco_these", "gt_data")
-    pred_dir = os.path.join("data", "sarco_these", "segmentations")
+    gt_dir = os.path.join("data", data_name, "gt_data")
+    pred_dir = os.path.join("data", data_name, "segmentations%s" % algo_version)
 
     ious, dices = [], []
     for filename in os.listdir(gt_dir):
         if not filename.endswith("nii.gz"):
             continue
         if filename not in os.listdir(pred_dir):
-            print(filename)
+            # print(filename)
             continue
         gt_mask = load_image(os.path.join(gt_dir, filename), tile_image=False)
         pred_mask = load_image(os.path.join(pred_dir, filename), tile_image=False)
@@ -33,10 +33,10 @@ def compute_metrics():
     return ious, dices
 
 
-def compute_iou(patient):
+def compute_iou(data_name, patient):
 
-    gt_dir = os.path.join("data", "sarco_these", "gt_data")
-    pred_dir = os.path.join("data", "sarco_these", "segmentations")
+    gt_dir = os.path.join("data", data_name, "gt_data")
+    pred_dir = os.path.join("data", data_name, "segmentations")
 
     gt_mask = load_image(os.path.join(gt_dir, "%s.nii.gz" % patient), tile_image=False)
     pred_mask = load_image(os.path.join(pred_dir, "%s.nii.gz" % patient), tile_image=False)
@@ -47,10 +47,10 @@ def compute_iou(patient):
     return iou
 
 
-def compute_dice(patient):
+def compute_dice(data_name, patient):
 
-    gt_dir = os.path.join("data", "sarco_these", "gt_data")
-    pred_dir = os.path.join("data", "sarco_these", "segmentations")
+    gt_dir = os.path.join("data", data_name, "gt_data")
+    pred_dir = os.path.join("data", data_name, "segmentations")
 
     gt_mask = load_image(os.path.join(gt_dir, "%s.nii.gz" % patient), tile_image=False)
     pred_mask = load_image(os.path.join(pred_dir, "%s.nii.gz" % patient), tile_image=False)

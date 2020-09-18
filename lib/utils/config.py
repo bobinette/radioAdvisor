@@ -47,11 +47,12 @@ __C.PIXEL_MEANS = np.array([[[54.79, 54.79, 54.79]]])
 
 __C.MIN_PROB = 1e-5
 __C.MAX_PROB = 1.0
-__C.SEG_SMOOTHING_METH = "crf"
+__C.SEG_SMOOTHING_METH = "max"
 __C.SEG_PAIRWISE_GAUSS_XY = 1
 __C.SEG_PAIRWISE_BILAT_XY = 50
 __C.SEG_PAIRWISE_BILAT_RGB = 14
 
+__C.FILTER_MASK = True
 __C.MUSCLE_MIN_VAL = -29
 __C.MUSCLE_MAX_VAL = 1174
 
@@ -95,3 +96,28 @@ __C.GPU_ID = 2
 
 # Small number
 __C.EPS = 10e-14
+
+
+def cfg_from_list(cfg_list):
+    """Set config keys via list (e.g., from command line)."""
+    from ast import literal_eval
+    if len(cfg_list) % 2 != 0:
+        raise AssertionError('cfg key needs to have a matching value in the list')
+    for k, v in zip(cfg_list[0::2], cfg_list[1::2]):
+        key_list = k.split('.')
+        d = __C
+        for subkey in key_list[:-1]:
+            if subkey not in d:
+                raise AssertionError('Subkey not in existing ones')
+            d = d[subkey]
+        subkey = key_list[-1]
+        if subkey not in d:
+                raise AssertionError('Subkey not in existing ones')
+        try:
+            value = literal_eval(v)
+        except Exception as e:
+            # handle the case when v is a string literal
+            value = v
+        if not isinstance(value, type(d[subkey])):
+            raise AssertionError('type {} does not match original type {}'.format(type(value), type(d[subkey])))
+        d[subkey] = value

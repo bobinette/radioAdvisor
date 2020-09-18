@@ -21,7 +21,7 @@ from lib.utils.config import cfg
 from lib.utils.load_parameters import load_net_pytorch
 
 
-def get_seg_map(im_path, model, gauss_xy, bilat_xy, bilat_rgb):
+def get_seg_map(im_path, model):
 
     """
     Get the image segmentation.
@@ -51,7 +51,8 @@ def get_seg_map(im_path, model, gauss_xy, bilat_xy, bilat_rgb):
     if cfg.SEG_SMOOTHING_METH == "max":
         seg_map = max_map.copy()
     elif cfg.SEG_SMOOTHING_METH == "crf":
-        seg_map = apply_dcrf(resized_img, cls_prob, gauss_xy, bilat_xy, bilat_rgb)
+        seg_map = apply_dcrf(resized_img, cls_prob, cfg.SEG_PAIRWISE_GAUSS_XY,
+                             cfg.SEG_PAIRWISE_BILAT_XY, cfg.SEG_PAIRWISE_BILAT_RGB)
         seg_map = (seg_map == 1).astype(np.uint8)
     else:
         print("not immplemented yet")
@@ -59,10 +60,11 @@ def get_seg_map(im_path, model, gauss_xy, bilat_xy, bilat_rgb):
     # Resize segmentation map to original image size
     seg_map = cv2.resize(seg_map, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
 
-    # Apply filter where we are suer there is no muscles
-    muscle_mask = (img[:, :, 0] < cfg.MUSCLE_MAX_VAL).astype(np.uint8) *\
-                  (img[:, :, 0] > cfg.MUSCLE_MIN_VAL).astype(np.uint8)
-    seg_map *= muscle_mask
+    # Apply filter where we are sure there is no muscles
+    if cfg.FILTER_MASK:
+        muscle_mask = (img[:, :, 0] < cfg.MUSCLE_MAX_VAL).astype(np.uint8) *\
+                      (img[:, :, 0] > cfg.MUSCLE_MIN_VAL).astype(np.uint8)
+        seg_map *= muscle_mask
 
     return seg_map, max_map, cls_prob
 
