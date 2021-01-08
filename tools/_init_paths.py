@@ -16,7 +16,7 @@ lib_path = osp.join(osp.dirname(__file__), "..", "lib")
 add_path(lib_path)
 
 # # Add python caffe to PYTHONPATH
-caffe_path = osp.join(osp.dirname(__file__), "..", "caffe-fast-rcnn", "python")
+caffe_path = osp.join('/', 'lib_build', "caffe-faster-rcnn", "python")
 add_path(caffe_path)
 
 

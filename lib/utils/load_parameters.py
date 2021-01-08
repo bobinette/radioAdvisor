@@ -24,7 +24,8 @@ def load_net(train_dir, net_name):
     """
 
     # Load net
-    train_path = os.path.join(os.path.dirname(__file__), '..', 'models', train_dir)
+    # train_path = os.path.join(os.path.dirname(__file__), '..', 'models', train_dir)
+    train_path = os.path.join("/", "data", 'radio_models', train_dir)
 
     proto = os.path.join(train_path, 'pipeline.prototxt')
 
@@ -37,7 +38,7 @@ def load_net(train_dir, net_name):
         pixel_means = np.load(os.path.join(train_path, 'mean_image.npy'))
 
     # Load ids
-    ids = np.load(os.path.join(train_path, 'ids.npy'))
+    ids = np.load(os.path.join(train_path, 'food_label2id.npy'))
 
     return net, pixel_means, ids
 

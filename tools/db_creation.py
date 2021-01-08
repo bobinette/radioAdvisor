@@ -17,6 +17,135 @@ from lib.utils.load_image import load_image
 from tools.data_parser import get_csv_data, load_seg_annotation
 
 
+def create_rpn_training_db(extract_name, pct_train=1.0):
+
+    # Init paths
+    root_dir = os.path.join("/", "home", "yann", "radioAdvisor")
+    annot_dir = os.path.join(root_dir, "data", "cancer-du-sein", "annotations")
+    im_dir = os.path.join(root_dir, "data", "cancer-du-sein", "images")
+    db_dir = os.path.join("/", "data", "train_extracts", "radio_extractions")
+
+    det_db, clf_db = [], []
+    pxl_stats = {"sum": 0, "cmpt": 0}
+    size_stats = {"h": [], "w": []}
+    for filename in os.listdir(annot_dir):
+        if not filename.endswith(".npy") or "._" in filename:
+            continue
+        annotations = np.load(os.path.join(annot_dir, filename))
+        for annotation in annotations:
+            data_path = annotation["name"]
+            patient_id = data_path.split("/")[-1].split("_")[0]
+            if patient_id == "5f5a3a67bd896051c20da9a2":
+                continue
+            # Image
+            img = np.squeeze(load_image(data_path, tile_image=False, transpose=False))
+            img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
+            img = crop_image(img, annotation)
+            img_path = os.path.join(im_dir, "%s.npy" % patient_id)
+            np.save(img_path, img)
+            # Label
+            det_label = "nodule"
+            clf_label = load_diagnosis("cancer-du-sein", patient_id)
+            # Store
+            det_db.append({
+                "name": img_path,
+                "photo_id": patient_id,
+                "boxes": get_boxes(annotation, det_label)
+            })
+            clf_db.append({
+                "name": img_path,
+                "photo_id": patient_id,
+                "boxes": get_boxes(annotation, clf_label)
+            })
+
+            # Stats
+            pxl_stats["sum"] += np.sum(img[:, :, 0])
+            pxl_stats["cmpt"] += np.size(img[:, :, 0])
+            size_stats["h"].append(img.shape[0])
+            size_stats["w"].append(img.shape[1])
+
+    # Training ids
+    det_train_ids = ["background", "nodule"]
+    clf_train_ids = ["benin", "malin"]
+
+    # Save
+    det_db_train, det_db_val, clf_db_train, clf_db_val = split_db(det_db, clf_db, pct_train)
+    np.save(os.path.join(db_dir, "imdb_train_cds_rpn_%s.npy" % extract_name), det_db_train)
+    np.save(os.path.join(db_dir, "imdb_val_cds_rpn_%s.npy" % extract_name), det_db_val)
+    np.save(os.path.join(db_dir, "food_label2id_cds_rpn_%s.npy" % extract_name), det_train_ids)
+    np.save(os.path.join(db_dir, "imdb_train_cds_clf_%s.npy" % extract_name), clf_db_train)
+    np.save(os.path.join(db_dir, "imdb_val_cds_clf_%s.npy" % extract_name), clf_db_val)
+    np.save(os.path.join(db_dir, "food_label2id_cds_clf_%s.npy" % extract_name), clf_train_ids)
+
+    return pxl_stats, size_stats
+
+
+def split_db(det_db, clf_db, pct_train):
+
+    nb_im = len(det_db)
+    nb_im_train = int(np.round(nb_im * pct_train))
+
+    idx_train = np.random.choice(np.arange(nb_im), nb_im_train, replace=False)
+    idx_val = np.arange(nb_im)[np.in1d(np.arange(nb_im), idx_train, invert=True)]
+    det_db_train = list(np.array(det_db)[idx_train])
+    det_db_val = list(np.array(det_db)[idx_val])
+    clf_db_train = list(np.array(clf_db)[idx_train])
+    clf_db_val = list(np.array(clf_db)[idx_val])
+
+    if nb_im_train % 2 > 0:
+        det_db_train.append(det_db_train[-1])
+        clf_db_train.append(clf_db_train[-1])
+
+    return det_db_train, det_db_val, clf_db_train, clf_db_val
+
+
+def get_boxes(annotations, label):
+
+    boxes = []
+    for box in annotations["boxes"]:
+        if box["id"] == "3":
+            continue
+        boxes.append({
+            "box": box["box"],
+            "id": label,
+            "is_background": False
+        })
+
+    return boxes
+
+
+def crop_image(img, annotations):
+
+    crop_box = None
+    for box in annotations["boxes"]:
+        if box["id"] == "3":
+            crop_box = box["box"]
+            break
+
+    crop_img = img.copy()
+    if crop_box is not None:
+        crop_img = img[crop_box[1]: crop_box[1] + crop_box[3], crop_box[0]: crop_box[0] + crop_box[2]]
+        for box in annotations["boxes"]:
+            if box["id"] != 3:
+                projected_box = [np.max((0, box["box"][0] - crop_box[0])),
+                                 np.max((0, box["box"][1] - crop_box[1])),
+                                 box["box"][2], box["box"][3]]
+                box["box"] = projected_box
+
+    return crop_img
+
+
+def load_diagnosis(folder_name, filename):
+
+    db_dir = os.path.join("data", folder_name, "raw-data")
+    img_id = filename.split(".")[0].split("_")[0]
+    with open(os.path.join(db_dir, "%s.json" % img_id)) as f:
+        diagnosis_info = json.load(f)
+    diagnosis = diagnosis_info["tag"]
+
+    return diagnosis
+
+
 def create_seg_training_db(datasets, extract_name, pct_train, use_hard_label=True, data_ext="npy"):
 
     # Init paths

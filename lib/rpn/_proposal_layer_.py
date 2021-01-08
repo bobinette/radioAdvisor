@@ -9,10 +9,10 @@ import caffe
 import numpy as np
 import yaml
 
-from lib.utils.config import cfg
-from lib.rpn.generate_anchors import generate_anchors
-from lib.tools.bbox_utils import bbox_transform_inv, clip_boxes
-from lib.tools.nms_wrapper import nms
+from foodvisor.apps.pipeline.lib.utils.config import cfg
+from foodvisor.apps.pipeline.lib.rpn.generate_anchors import generate_anchors
+from foodvisor.apps.pipeline.lib.tools.bbox_utils import bbox_transform_inv, clip_boxes
+from foodvisor.apps.pipeline.lib.tools.nms_wrapper import nms
 
 DEBUG = False
 
@@ -25,7 +25,7 @@ class ProposalLayer(caffe.Layer):
 
     def setup(self, bottom, top):
         # parse the layer parameter string, which must be valid YAML
-        layer_params = yaml.load(self.param_str)
+        layer_params = yaml.safe_load(self.param_str)
 
         self._feat_stride = layer_params['feat_stride']
         anchor_scales = layer_params.get('scales', (8, 16, 32))

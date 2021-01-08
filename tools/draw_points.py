@@ -8,6 +8,7 @@
 
 import copy
 import cv2
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -15,33 +16,38 @@ import sys
 
 from lib.utils.load_image import load_image
 from tools.coordinates import *
+from tools.db_creation import load_diagnosis
 
-ID2NAME = {"0": "malin", "1": "benin"}
+ID2NAME = {"0": "malin", "1": "inclassable", "2": "benin"}
 
 
-def annotated_db(folder_name, db_name, data_ext=".nii.gz"):
+def annotated_db(folder_name, db_name, add_diagnosis=False, data_ext=".nii.gz"):
 
     db, done_ims = [], []
     save_path = os.path.join("data", folder_name, "annotations", "%s.npy" % db_name)
     if os.path.exists(save_path):
-        db = list(np.load(save_path))
+        db = list(np.load(save_path, allow_pickle=True))
         done_ims = [_im["name"] for _im in db]
 
     for filename in os.listdir(os.path.join("data", folder_name, "raw-data")):
         if not filename.endswith(data_ext) or "._" in filename:
             continue
         img_path = os.path.join("data", folder_name, "raw-data", filename)
+        diagnosis = ""
+        if add_diagnosis:
+            diagnosis = load_diagnosis(folder_name, filename)
+        print(filename, diagnosis)
         if img_path in done_ims:
             continue
-        db.append(annotate_im_with_points(img_path))
+        db.append(annotate_im_with_points(img_path, img_title=diagnosis))
         np.save(save_path, db)
 
 
-def annotate_im_with_points(im_path, segment_only=False):
+def annotate_im_with_points(im_path, img_title="", segment_only=False):
 
     img = np.squeeze(load_image(im_path, tile_image=False, transpose=False))
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
-    annotator = Annotator(img, segment_only=segment_only, id2name=ID2NAME)
+    annotator = Annotator(img, segment_only=segment_only, id2name=ID2NAME, annotator_name=img_title)
     annotator.run_interface()
     cv2.destroyAllWindows()
 

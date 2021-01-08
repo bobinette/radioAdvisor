@@ -20,11 +20,14 @@ cfg = __C
 # ################ CNN ANALYSIS ################
 
 # Size of the image we forward in the net
-__C.IM_SIZE_SEG = 512  # 500
+__C.IM_SIZE_SEG = 500  # 512  # 500
 
 # Models and where to find them
-__C.NET_DIR_RPN = 'vgg_rpn_radio'
-__C.NET_NAME_RPN = 'vgg16.caffemodel'
+__C.NET_DIR_RPN = "vgg_rpn_cds_20200928" # 'vgg_rpn_radio'
+__C.NET_NAME_RPN = 'vgg16_faster_rcnn.caffemodel'
+__C.NET_DIR_CLF = "vgg_clf_cds_20200928"
+__C.NET_NAME_CLF = "vgg16.caffemodel"
+
 __C.NET_DIR_F_CLF = 'vgg_f_clf_radio_full'
 # __C.NET_DIR_F_CLF = None
 __C.NET_NAME_F_CLF = 'vgg16.caffemodel'
@@ -40,7 +43,8 @@ __C.NB_CLS_SEG = 3
 # These are the values originally used for training VGG16
 # __C.PIXEL_MEANS = np.array([[[0.22625, 0.22625, 0.22625]]])
 # __C.PIXEL_MEANS = np.array([[[49.56, 49.56, 49.56]]])
-__C.PIXEL_MEANS = np.array([[[54.79, 54.79, 54.79]]])
+# __C.PIXEL_MEANS = np.array([[[54.79, 54.79, 54.79]]])
+__C.PIXEL_MEANS = np.array([[[65.98, 65.98, 65.98]]])
 
 
 # ################ SEG PARAMETERS ################

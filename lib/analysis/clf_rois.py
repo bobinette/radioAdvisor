@@ -14,7 +14,25 @@ from lib.utils.config import cfg
 from tools.plot import plot_rectangle
 
 
-def classify_rois(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids, enrich=False):
+def classify_rois_cds(im, rois, net, pxl_mean, ids):
+
+    # Forward rois through net to get probas
+    cls_prob, _ = get_features_ycnn(im, rois, net, pxl_mean)
+    clf_ids = ids[np.argmax(cls_prob, axis=1)]
+
+    return np.array(clf_ids), cls_prob
+
+
+def classify_rois_cds_svm(im, w_b, rois, net, pxl_mean, ids):
+
+    _, feats = get_features_ycnn(im, rois, net, pxl_mean)
+    clf_score = (np.dot(feats, w_b[0].T) + w_b[1]).ravel()
+    clf_id = "benin" if clf_score < 0 else "malin"
+
+    return clf_id, clf_score
+
+
+def classify_rois_of(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids, enrich=False):
 
     if enrich:
         # Augment rois
@@ -67,7 +85,7 @@ def classify_rois(im, rois, f_net, f_pxl_mean, f_ids, o_net, o_pxl_mean, o_ids, 
     return np.array(clf_ids), f_score, l_scores, o_scores
 
 
-def classify_rois_(im, rois, net, pxl_mean, ids):
+def classify_rois(im, rois, net, pxl_mean, ids):
 
     # Forward rois through net to get probas
     cls_prob = get_features_ycnn(im, rois, net, pxl_mean)

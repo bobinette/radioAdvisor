@@ -90,8 +90,9 @@ def get_features_ycnn(im, rois, net, pxl_mean):
 
     # Extract data
     cls_prob = blobs_out['cls_prob']
+    feats = net.blobs["fc7"].data.copy()
 
-    return cls_prob
+    return cls_prob, feats
 
 
 def resize_image(im, target_size):
