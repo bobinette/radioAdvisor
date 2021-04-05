@@ -28,12 +28,15 @@ from tools.metrics_seg import compute_metrics
 def extract_seg_map(data_name, algo_version, model=None, viz_results=False):
 
     # Numpy data dir
-    im_dir = os.path.join("data", data_name, "images")
-    data_dir = os.path.join("data", data_name, "dcm_data")
-    seg_dir = os.path.join("data", data_name, "segmentations%s" % algo_version)
+    data_root_dir = os.path.join("/", "data", "radio-datasets", data_name)
+    data_dir = os.path.join(data_root_dir, "dcm_data")
+    im_dir = os.path.join(data_root_dir, "images")
+    if not os.path.exists(im_dir):
+        os.makedirs(im_dir)
+    seg_dir = os.path.join(data_root_dir, "segmentations%s" % algo_version)
     if not os.path.exists(seg_dir):
         os.makedirs(seg_dir)
-    viz_dir = os.path.join("data", data_name, "results_check%s" % algo_version)
+    viz_dir = os.path.join(data_root_dir, "results_check%s" % algo_version)
     if not os.path.exists(viz_dir):
         os.makedirs(viz_dir)
 

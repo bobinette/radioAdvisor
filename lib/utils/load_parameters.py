@@ -6,7 +6,7 @@
 # Written by Yann Giret
 # --------------------------------------------------------
 
-import caffe
+# import caffe
 import numpy as np
 import os
 import torch

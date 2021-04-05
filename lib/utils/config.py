@@ -96,7 +96,7 @@ __C.RNG_SEED = 4
 
 # The architecture to use
 __C.IS_GPU = True
-__C.GPU_ID = 2
+__C.GPU_ID = 0
 
 # Small number
 __C.EPS = 10e-14
